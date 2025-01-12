@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "floody": {
+      "commandName": "Project",
+      "commandLineArgs": "http://localhost:5000 -H \"a: bcd\"  -H \"z: abc\" -d 5s"
+    }
+  }
+}
