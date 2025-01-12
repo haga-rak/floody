@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.CommandLine;
+using System.Data;
 using System.Net.Http;
 
 namespace floody
@@ -54,14 +55,25 @@ namespace floody
 
         public async Task<FloodResult> ExecuteAsync()
         {
-            using var cts = new CancellationTokenSource(_timeout);
+            Console.WriteLine("Warming up...for {0}s", (int) _options.StartupSettings.WarmupDuration.TotalSeconds);
+            await InternalExecute(_options.StartupSettings.WarmupDuration, false);
+
+            Console.WriteLine("Flood starting...");
+            await InternalExecute(_timeout, true);
+
+            return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
+        }
+
+        private async Task InternalExecute(TimeSpan timeout, bool updateStat)
+        {
+            using var cts = new CancellationTokenSource(timeout);
 
             var token = cts.Token;
             
             while (!token.IsCancellationRequested)
             {
                 await _maxHttpClient.WaitAsync(token);
-                _ = InternalExecuteAsync(token);
+                _ = InternalQueryAsync(token, updateStat);
             }
 
             try
@@ -72,11 +84,9 @@ namespace floody
             {
 
             }
-
-            return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
         }
 
-        private async ValueTask InternalExecuteAsync(CancellationToken token)
+        private async ValueTask InternalQueryAsync(CancellationToken token, bool updateStat)
         {
             try
             {
@@ -87,26 +97,36 @@ namespace floody
                 var bodyStream = await response.Content.ReadAsStreamAsync(token);
                 await bodyStream.CopyToAsync(Stream.Null, token);
 
-                if (response.IsSuccessStatusCode)
+                if (updateStat)
                 {
-                    Interlocked.Increment(ref _successCount);
-                }
-                else
-                {
-                    Interlocked.Increment(ref _failCount);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Interlocked.Increment(ref _successCount);
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref _failCount);
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
                 return;
             }
-            catch 
+            catch
             {
-                Interlocked.Increment(ref _networkFailCount);
+                if (updateStat)
+                {
+                    Interlocked.Increment(ref _networkFailCount);
+                }
             }
             finally
             {
-                Interlocked.Increment(ref _count);
+                if (updateStat)
+                {
+                    Interlocked.Increment(ref _count);
+                }
+
                 _maxHttpClient.Release();
             }
         }

@@ -51,13 +51,3 @@ public class Header
 
     public string Value { get; }
 }
-
-public class StartupSettings
-{
-    public StartupSettings(TimeSpan duration)
-    {
-        Duration = duration;
-    }
-
-    public TimeSpan Duration { get; }
-}

@@ -1,4 +1,4 @@
-﻿using System.CommandLine;
+using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Net;
@@ -62,6 +62,18 @@ public static class FloodyOptionBuilder
             };
 
             option.SetDefaultValue(TimeSpan.FromSeconds(30));
+
+            yield return option;
+        }
+
+        {
+            var option = new Option<TimeSpan>(["--warm-up", "-w"], parseArgument: ParseDuration)
+            {
+                Arity = ArgumentArity.ZeroOrOne,
+                Description = "Warm up duration (unit accepted: ms, s, mn, h)"
+            };
+
+            option.SetDefaultValue(TimeSpan.FromSeconds(5));
 
             yield return option;
         }
@@ -157,7 +169,11 @@ public static class FloodyOptionBuilder
             .GetValueForOption(
                 symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "duration"));
 
-        return new StartupSettings(duration);
+        var warmup = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "warm-up"));
+
+        return new StartupSettings(duration, warmup);
     }
 
 

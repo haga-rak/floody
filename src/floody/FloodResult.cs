@@ -11,8 +11,11 @@ namespace floody
         }
 
         public int Count { get; }
+
         public int SuccessCount { get; }
+
         public int FailCount { get; }
+
         public int NetworkFailCount { get; }
 
         public string PrettyFormat(FloodyOptions floodOptions)
