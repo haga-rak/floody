@@ -1,8 +1,3 @@
-using System.Collections.Concurrent;
-using System.CommandLine;
-using System.Data;
-using System.Net.Http;
-
 namespace floody
 {
     public class FloodExecutor
@@ -14,10 +9,9 @@ namespace floody
         private int _successCount;
         private int _failCount;
         private int _networkFailCount;
-        private readonly HttpClientHandler _httpClientHandler;
         private readonly HttpClient _client;
 
-        private readonly SemaphoreSlim _maxHttpClient = new(100);
+        private readonly SemaphoreSlim _maxHttpClient = new(64);
 
         public FloodExecutor(FloodyOptions options)
         {
@@ -29,13 +23,18 @@ namespace floody
                 httpClientHandler.Proxy = options.HttpSettings.WebProxy;
                 httpClientHandler.UseProxy = true;
             }
+            
+            httpClientHandler.ServerCertificateCustomValidationCallback =
+                (_, _, _, _) => true;
 
             httpClientHandler.MaxConnectionsPerServer = options.HttpSettings.ConcurrentConnection;
 
             CreateRequest(options);
 
-            _httpClientHandler = httpClientHandler;
-            _client = new HttpClient(_httpClientHandler);
+            _client = new HttpClient(httpClientHandler)
+            {
+                
+            };
 
             _timeout = options.StartupSettings.Duration;
         }
@@ -58,7 +57,7 @@ namespace floody
             Console.WriteLine("Warming up...for {0}s", (int) _options.StartupSettings.WarmupDuration.TotalSeconds);
             await InternalExecute(_options.StartupSettings.WarmupDuration, false);
 
-            Console.WriteLine("Flood starting...");
+            Console.WriteLine("Flood starting...for {0}s", (int)_timeout.TotalSeconds);
             await InternalExecute(_timeout, true);
 
             return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
@@ -69,15 +68,15 @@ namespace floody
             using var cts = new CancellationTokenSource(timeout);
 
             var token = cts.Token;
-            
-            while (!token.IsCancellationRequested)
-            {
-                await _maxHttpClient.WaitAsync(token);
-                _ = InternalQueryAsync(token, updateStat);
-            }
 
             try
             {
+                while (!token.IsCancellationRequested)
+                {
+                    await _maxHttpClient.WaitAsync(token);
+                    _ = InternalQueryAsync(token, updateStat);
+                }
+
                 await Task.Delay(Timeout.Infinite, token);
             }
             catch (OperationCanceledException)
@@ -92,9 +91,18 @@ namespace floody
             {
                 var requestMessage = CreateRequest(_options);
 
-                var response = await _client.SendAsync(requestMessage, token);
+                using var response = await _client.SendAsync(requestMessage, token);
 
-                var bodyStream = await response.Content.ReadAsStreamAsync(token);
+                await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
+
+#if DEBUG
+                if ((int)response.StatusCode == 528)
+                {
+                    var bodyString = await response.Content.ReadAsStringAsync(token);
+                }
+#endif
+
+
                 await bodyStream.CopyToAsync(Stream.Null, token);
 
                 if (updateStat)
@@ -105,7 +113,14 @@ namespace floody
                     }
                     else
                     {
-                        Interlocked.Increment(ref _failCount);
+                        if ((int)response.StatusCode == 528)
+                        {
+                            Interlocked.Increment(ref _networkFailCount);
+                        }
+                        else
+                        {
+                            Interlocked.Increment(ref _failCount);
+                        }
                     }
                 }
             }

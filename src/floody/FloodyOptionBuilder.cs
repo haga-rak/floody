@@ -176,7 +176,6 @@ public static class FloodyOptionBuilder
         return new StartupSettings(duration, warmup);
     }
 
-
     public static Uri ParseUri(ArgumentResult result)
     {
         var t = result.Tokens.Select(token => token.Value).First();
@@ -201,7 +200,12 @@ public static class FloodyOptionBuilder
 
     public static int ParseConcurrentConnection(ArgumentResult result)
     {
-        var value =  result.GetValueOrDefault<int>();
+        var rawValue = result.Tokens.First().Value;
+
+        if (!int.TryParse(rawValue, out var value))
+        {
+            throw new ArgumentException("Invalid concurrent connection format: must be integer");
+        }
 
         if (value <= 0)
         {
@@ -233,7 +237,7 @@ public static class FloodyOptionBuilder
 
     public static WebProxy ParseWebProxy(ArgumentResult result)
     {
-        var rawProxy =  result.GetValueOrDefault<string>();
+        var rawProxy =  result.Tokens.First().Value;
 
         if (Uri.TryCreate(rawProxy, UriKind.Absolute, out var uri))
         {

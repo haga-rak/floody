@@ -14,19 +14,27 @@ namespace floody
 
             rootCommand.SetHandler(async (context) =>
             {
-                var httpSettings = FloodyOptionBuilder.CreateHttpSettings(context, symbols);
-                var startupSettings = FloodyOptionBuilder.CreateStartupSettings(context, symbols);
-                var options = new FloodyOptions(httpSettings, startupSettings);
+                try
+                {
+                    var httpSettings = FloodyOptionBuilder.CreateHttpSettings(context, symbols);
+                    var startupSettings = FloodyOptionBuilder.CreateStartupSettings(context, symbols);
+                    var options = new FloodyOptions(httpSettings, startupSettings);
 
-                var floody = new FloodExecutor(options);
+                    var floody = new FloodExecutor(options);
 
-                var result = await floody.ExecuteAsync();
+                    var result = await floody.ExecuteAsync();
 
-                // Pretty print the result with Console.WriteLine
+                    // Pretty print the result with Console.WriteLine
 
-                var prettyMessage = result.PrettyFormat(options);
+                    var prettyMessage = result.PrettyFormat(options);
 
-                Console.WriteLine(prettyMessage);
+                    Console.WriteLine(prettyMessage);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
             });
 
             await rootCommand.InvokeAsync(args);
