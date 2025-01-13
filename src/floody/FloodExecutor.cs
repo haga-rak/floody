@@ -11,7 +11,7 @@ namespace floody
         private int _networkFailCount;
         private readonly HttpClient _client;
 
-        private readonly SemaphoreSlim _maxHttpClient = new(64);
+        private readonly SemaphoreSlim _maxHttpClient = new(128);
 
         public FloodExecutor(FloodyOptions options)
         {
@@ -91,7 +91,8 @@ namespace floody
             {
                 var requestMessage = CreateRequest(_options);
 
-                using var response = await _client.SendAsync(requestMessage, token);
+                using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead,
+                    token);
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
 
