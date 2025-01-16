@@ -62,7 +62,7 @@ namespace floody
             Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
-            return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
+            return new FloodResult(_count, _successCount, _failCount, _networkFailCount, _options);
         }
 
         private async Task InternalExecute(TimeSpan timeout, bool updateStat)

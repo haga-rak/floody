@@ -41,7 +41,7 @@ namespace floody
                             }));
                     }
 
-                    var prettyMessage = result.PrettyFormat(options);
+                    var prettyMessage = result.PrettyFormat();
                     Console.WriteLine(prettyMessage);
                 }
                 catch (Exception e)

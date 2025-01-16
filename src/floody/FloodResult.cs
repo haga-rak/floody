@@ -1,36 +1,47 @@
+using System.Xml.Linq;
+
 namespace floody
 {
     public class FloodResult
     {
-        public FloodResult(int count, int successCount, int failCount, int networkFailCount)
+        public FloodResult(int count, int successCount, int httpFailCount, int networkFailCount, FloodyOptions options)
         {
             Count = count;
             SuccessCount = successCount;
-            FailCount = failCount;
+            HttpFailCount = httpFailCount;
             NetworkFailCount = networkFailCount;
+            Options = options;
         }
+        public FloodyOptions Options { get; }
 
         public int Count { get; }
 
         public int SuccessCount { get; }
 
-        public int FailCount { get; }
+        public int HttpFailCount { get; }
 
         public int NetworkFailCount { get; }
 
-        public string PrettyFormat(FloodyOptions floodOptions)
+
+        public double RequestPerSeconds
         {
-            var totalDuration = floodOptions.StartupSettings.Duration;
+            get
+            {
+                var totalDuration = Options.StartupSettings.Duration;
 
-            var reqPerSeconds = SuccessCount / totalDuration.TotalSeconds;
+                var reqPerSeconds = SuccessCount / totalDuration.TotalSeconds;
 
-            // Format as pretty table for console 
+                return reqPerSeconds;
+            }
+        }
 
+        public string PrettyFormat()
+        {
             return $"Total requests: {Count}\n" +
                    $"Success: {SuccessCount}\n" +
-                   $"Fail: {FailCount}\n" +
+                   $"Fail: {HttpFailCount}\n" +
                    $"Network Fail: {NetworkFailCount}\n" +
-                   $"Requests per seconds: {reqPerSeconds}";
+                   $"Requests per seconds: {RequestPerSeconds}";
         }
     }
 }

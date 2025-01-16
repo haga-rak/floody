@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace floody
 {
     public class StartupSettings
@@ -13,6 +15,10 @@ namespace floody
 
         public TimeSpan WarmupDuration { get; }
 
+        [JsonIgnore]
         public FileInfo ? OutputFile { get; }
+
+        [JsonPropertyName("outputFile")]
+        public string ? OutputFileString => OutputFile?.FullName;
     }
 }
