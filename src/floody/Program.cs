@@ -24,8 +24,6 @@ namespace floody
 
                     var result = await floody.ExecuteAsync();
 
-                    // Pretty print the result with Console.WriteLine
-
                     var prettyMessage = result.PrettyFormat(options);
 
                     Console.WriteLine(prettyMessage);

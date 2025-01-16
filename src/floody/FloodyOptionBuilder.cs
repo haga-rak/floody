@@ -1,82 +1,52 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.ComponentModel;
 using System.Net;
 
 namespace floody;
 
 public static class FloodyOptionBuilder
 {
+    private static Option<T> CreateOption<T>(string[] aliases, ParseArgument<T> parseArgument,
+        ArgumentArity argumentArity, string description, T defaultValue = default(T))
+    {
+        var option = new Option<T>(aliases, parseArgument: parseArgument)
+        {
+            Arity = argumentArity,
+            Description = description
+        };
+
+        if (!Equals(defaultValue, default(T)))
+        {
+            option.SetDefaultValue(defaultValue);
+        }
+
+        return option;
+    }
+
     public static IEnumerable<Symbol> BuildSymbols()
     {
         yield return new Argument<Uri>("uri", parse: ParseUri) { Arity = ArgumentArity.ExactlyOne };
 
-        {
-            var option = new Option<string>(["--method", "-X"], parseArgument: ParseMethod) {
-                Arity = ArgumentArity.ZeroOrOne,
-                Description = "Method to used"
-            };
+        yield return CreateOption(new[] { "--method", "-X" }, ParseMethod, ArgumentArity.ZeroOrOne,
+            "Method to used", "GET");
 
-            option.SetDefaultValue("GET");
+        yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
+                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 8);
 
-            yield return option;
-        }
+        yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
+            "Address of HTTP proxy");
 
-        {
-            var option = new Option<int>(["--concurrent-connection", "-c"], parseArgument: ParseConcurrentConnection) {
-                Arity = ArgumentArity.ZeroOrOne,
-                Description = "Concurrent connection count to the remote"
-            };
+        yield return CreateOption(new[] { "--header", "-H" }, ParseHeaders, ArgumentArity.ZeroOrMore,
+            "Additional HTTP headers", Array.Empty<Header>());
 
-            option.SetDefaultValue(8);
+        yield return CreateOption(new[] { "--duration", "-d" }, ParseDuration, ArgumentArity.ZeroOrOne,
+            "Test duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(30));
 
-            yield return option;
-        }
+        yield return CreateOption(new[] { "--warm-up", "-w" }, ParseDuration, ArgumentArity.ZeroOrOne,
+            "Warm up duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(5));
 
-        {
-            var option = new Option<WebProxy?>(["--proxy", "-x"], parseArgument: ParseWebProxy)
-            {
-                Arity = ArgumentArity.ZeroOrOne,
-                Description = "Address of HTTP proxy"
-            };
-
-            yield return option;
-        }
-
-        {
-            var option = new Option<IReadOnlyCollection<Header>>(["--header", "-H"], parseArgument: ParseHeaders)
-            {
-                Arity = ArgumentArity.ZeroOrMore,
-                Description = "Additional HTTP headers"
-            };
-
-            option.SetDefaultValue(Array.Empty<Header>());
-            yield return option;
-        }
-
-        {
-            var option = new Option<TimeSpan>(["--duration", "-d"], parseArgument: ParseDuration)
-            {
-                Arity = ArgumentArity.ZeroOrOne,
-                Description = "Test duration (unit accepted: ms, s, mn, h)"
-            };
-
-            option.SetDefaultValue(TimeSpan.FromSeconds(30));
-
-            yield return option;
-        }
-
-        {
-            var option = new Option<TimeSpan>(["--warm-up", "-w"], parseArgument: ParseDuration)
-            {
-                Arity = ArgumentArity.ZeroOrOne,
-                Description = "Warm up duration (unit accepted: ms, s, mn, h)"
-            };
-
-            option.SetDefaultValue(TimeSpan.FromSeconds(5));
-
-            yield return option;
-        }
     }
 
     private static TimeSpan ParseDuration(ArgumentResult result)
