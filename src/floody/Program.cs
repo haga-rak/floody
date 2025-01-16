@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text.Json;
 
 namespace floody
 {
@@ -6,7 +7,7 @@ namespace floody
     {
         static async Task Main(string[] args)
         {
-            var symbols = FloodyOptionBuilder.BuildSymbols().ToList();
+            var symbols = FloodyOptionBuilder.EnumerateCommandLineSymbols().ToList();
 
             var rootCommand = new RootCommand("A simple http load test tool supporting proxy");
 
@@ -24,8 +25,23 @@ namespace floody
 
                     var result = await floody.ExecuteAsync();
 
-                    var prettyMessage = result.PrettyFormat(options);
+                    if (startupSettings.OutputFile != null)
+                    {
+                        var parentDirectory = startupSettings.OutputFile.Directory;
 
+                        if (parentDirectory != null && !parentDirectory.Exists)
+                        {
+                            parentDirectory.Create();
+                        }
+
+                        await File.WriteAllTextAsync(startupSettings.OutputFile.FullName,
+                            JsonSerializer.Serialize(result, new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                            {
+                                WriteIndented = true
+                            }));
+                    }
+
+                    var prettyMessage = result.PrettyFormat(options);
                     Console.WriteLine(prettyMessage);
                 }
                 catch (Exception e)

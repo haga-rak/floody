@@ -1,13 +1,39 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
-using System.ComponentModel;
 using System.Net;
 
 namespace floody;
 
 public static class FloodyOptionBuilder
 {
+    public static IEnumerable<Symbol> EnumerateCommandLineSymbols()
+    {
+        yield return new Argument<Uri>("uri", parse: ParseUri) { Arity = ArgumentArity.ExactlyOne };
+
+        yield return CreateOption(new[] { "--method", "-X" }, ParseMethod, ArgumentArity.ZeroOrOne,
+            "Method to used", "GET");
+
+        yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
+                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 8);
+
+        yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
+            "Address of HTTP proxy");
+
+        yield return CreateOption(new[] { "--header", "-H" }, ParseHeaders, ArgumentArity.ZeroOrMore,
+            "Additional HTTP headers", Array.Empty<Header>());
+
+        yield return CreateOption(new[] { "--output-file", "-o" }, ParseOutputFile, ArgumentArity.ZeroOrOne,
+            "Output benchmark result into a json file", (FileInfo?) null);
+
+        yield return CreateOption(new[] { "--duration", "-d" }, ParseDuration, ArgumentArity.ZeroOrOne,
+            "Test duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(30));
+
+        yield return CreateOption(new[] { "--warm-up", "-w" }, ParseDuration, ArgumentArity.ZeroOrOne,
+            "Warm up duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(5));
+
+    }
+    
     private static Option<T> CreateOption<T>(string[] aliases, ParseArgument<T> parseArgument,
         ArgumentArity argumentArity, string description, T defaultValue = default(T))
     {
@@ -25,28 +51,86 @@ public static class FloodyOptionBuilder
         return option;
     }
 
-    public static IEnumerable<Symbol> BuildSymbols()
+
+    private static FileInfo? ParseOutputFile(ArgumentResult result)
     {
-        yield return new Argument<Uri>("uri", parse: ParseUri) { Arity = ArgumentArity.ExactlyOne };
+        var rawValue = result.Tokens.First().Value;
 
-        yield return CreateOption(new[] { "--method", "-X" }, ParseMethod, ArgumentArity.ZeroOrOne,
-            "Method to used", "GET");
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
 
-        yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
-                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 8);
+        return new FileInfo(rawValue);
+    }
 
-        yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
-            "Address of HTTP proxy");
 
-        yield return CreateOption(new[] { "--header", "-H" }, ParseHeaders, ArgumentArity.ZeroOrMore,
-            "Additional HTTP headers", Array.Empty<Header>());
+    public static HttpSettings CreateHttpSettings(
+        InvocationContext invocationContext,
+        IReadOnlyCollection<Symbol> symbols)
+    {
+        var uri = invocationContext.ParseResult
+            .GetValueForArgument(
+                symbols.OfType<Argument<Uri>>().First(a => a.Name == "uri"));
 
-        yield return CreateOption(new[] { "--duration", "-d" }, ParseDuration, ArgumentArity.ZeroOrOne,
-            "Test duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(30));
+        var method = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<string>>().First(a => a.Name == "method"))!;
 
-        yield return CreateOption(new[] { "--warm-up", "-w" }, ParseDuration, ArgumentArity.ZeroOrOne,
-            "Warm up duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(5));
+        var concurrentConnection = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<int>>().First(a => a.Name == "concurrent-connection"));
 
+        var webProxy = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<WebProxy?>>().First(a => a.Name == "proxy"));
+
+        var headers = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<IReadOnlyCollection<Header>>>().First(a => a.Name == "header"))!;
+
+
+        return new HttpSettings(uri, method, concurrentConnection, webProxy, headers);
+    }
+
+    public static StartupSettings CreateStartupSettings(InvocationContext invocationContext,
+        IReadOnlyCollection<Symbol> symbols)
+    {
+        var duration = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "duration"));
+
+        var warmup = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "warm-up"));
+
+        var outputFile = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<FileInfo>>().First(a => a.Name == "output-file"));
+
+        return new StartupSettings(duration, warmup, outputFile);
+    }
+
+    public static Uri ParseUri(ArgumentResult result)
+    {
+        var t = result.Tokens.Select(token => token.Value).First();
+
+        if (!Uri.TryCreate(t, UriKind.Absolute, out var uri))
+        {
+            throw new ArgumentException("Invalid uri format");
+        }
+
+        if (!uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Only HTTP(s) is supported");
+        }
+
+        return uri;
+    }
+
+    public static string ParseMethod(ArgumentResult result)
+    {
+        return result.GetValueOrDefault<string>();
     }
 
     private static TimeSpan ParseDuration(ArgumentResult result)
@@ -102,70 +186,6 @@ public static class FloodyOptionBuilder
         }
 
         throw new ArgumentException("Invalid duration format");
-    }
-
-    public static HttpSettings CreateHttpSettings(
-        InvocationContext invocationContext,
-        IReadOnlyCollection<Symbol> symbols)
-    {
-        var uri = invocationContext.ParseResult
-            .GetValueForArgument(
-                symbols.OfType<Argument<Uri>>().First(a => a.Name == "uri"));
-
-        var method = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<string>>().First(a => a.Name == "method"))!;
-
-        var concurrentConnection = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<int>>().First(a => a.Name == "concurrent-connection"));
-
-        var webProxy = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<WebProxy?>>().First(a => a.Name == "proxy"));
-
-        var headers = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<IReadOnlyCollection<Header>>>().First(a => a.Name == "header"))!;
-
-
-        return new HttpSettings(uri, method, concurrentConnection, webProxy, headers);
-    }
-
-    public static StartupSettings CreateStartupSettings(InvocationContext invocationContext,
-        IReadOnlyCollection<Symbol> symbols)
-    {
-        var duration = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "duration"));
-
-        var warmup = invocationContext.ParseResult
-            .GetValueForOption(
-                symbols.OfType<Option<TimeSpan>>().First(a => a.Name == "warm-up"));
-
-        return new StartupSettings(duration, warmup);
-    }
-
-    public static Uri ParseUri(ArgumentResult result)
-    {
-        var t = result.Tokens.Select(token => token.Value).First();
-
-        if (!Uri.TryCreate(t, UriKind.Absolute, out var uri))
-        {
-            throw new ArgumentException("Invalid uri format");
-        }
-
-        if (!uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException("Only HTTP(s) is supported");
-        }
-
-        return uri;
-    }
-
-    public static string ParseMethod(ArgumentResult result)
-    {
-        return result.GetValueOrDefault<string>();
     }
 
     public static int ParseConcurrentConnection(ArgumentResult result)

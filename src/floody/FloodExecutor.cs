@@ -98,14 +98,6 @@ namespace floody
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
 
-//#if DEBUG
-//                if ((int)response.StatusCode == 528)
-//                {
-//                    var bodyString = await response.Content.ReadAsStringAsync(token);
-//                }
-//#endif
-
-
                 await bodyStream.CopyToAsync(Stream.Null, token);
 
                 if (updateStat)
