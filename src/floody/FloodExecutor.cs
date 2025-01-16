@@ -11,7 +11,7 @@ namespace floody
         private int _networkFailCount;
         private readonly HttpClient _client;
 
-        private readonly SemaphoreSlim _maxHttpClient = new(128);
+        private readonly SemaphoreSlim _maxHttpClient;
 
         public FloodExecutor(FloodyOptions options)
         {
@@ -23,7 +23,9 @@ namespace floody
                 httpClientHandler.Proxy = options.HttpSettings.WebProxy;
                 httpClientHandler.UseProxy = true;
             }
-            
+
+            _maxHttpClient = new SemaphoreSlim(Math.Max(128, options.HttpSettings.ConcurrentConnection) + 4);
+
             httpClientHandler.ServerCertificateCustomValidationCallback =
                 (_, _, _, _) => true;
 
@@ -57,7 +59,7 @@ namespace floody
             Console.WriteLine("Warming up...for {0}s", (int) _options.StartupSettings.WarmupDuration.TotalSeconds);
             await InternalExecute(_options.StartupSettings.WarmupDuration, false);
 
-            Console.WriteLine("Flood starting...for {0}s", (int)_timeout.TotalSeconds);
+            Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
             return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
@@ -96,12 +98,12 @@ namespace floody
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
 
-#if DEBUG
-                if ((int)response.StatusCode == 528)
-                {
-                    var bodyString = await response.Content.ReadAsStringAsync(token);
-                }
-#endif
+//#if DEBUG
+//                if ((int)response.StatusCode == 528)
+//                {
+//                    var bodyString = await response.Content.ReadAsStringAsync(token);
+//                }
+//#endif
 
 
                 await bodyStream.CopyToAsync(Stream.Null, token);
