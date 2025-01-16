@@ -15,10 +15,9 @@ namespace floody
 
         public TimeSpan WarmupDuration { get; }
 
-        [JsonIgnore]
-        public FileInfo ? OutputFile { get; }
+        [JsonIgnore] public FileInfo? OutputFile { get; }
 
-        [JsonPropertyName("outputFile")]
-        public string ? OutputFileString => OutputFile?.FullName;
+        [JsonPropertyName("outputFile")] public string? OutputFileString => OutputFile?.FullName;
     }
+
 }

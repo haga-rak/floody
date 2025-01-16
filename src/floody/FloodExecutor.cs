@@ -9,6 +9,8 @@ namespace floody
         private int _successCount;
         private int _failCount;
         private int _networkFailCount;
+        private long _totalReceived;
+
         private readonly HttpClient _client;
 
         private readonly SemaphoreSlim _maxHttpClient;
@@ -62,7 +64,7 @@ namespace floody
             Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
-            return new FloodResult(_count, _successCount, _failCount, _networkFailCount, _options);
+            return new FloodResult(_count, _successCount, _failCount, _networkFailCount, _options, _totalReceived);
         }
 
         private async Task InternalExecute(TimeSpan timeout, bool updateStat)
@@ -87,21 +89,23 @@ namespace floody
             }
         }
 
-        private async ValueTask InternalQueryAsync(CancellationToken token, bool updateStat)
+        private async ValueTask InternalQueryAsync(CancellationToken token, bool updateStatistics)
         {
             try
             {
                 var requestMessage = CreateRequest(_options);
-
+                
                 using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead,
                     token);
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
+                
+                var totalBodySize = await bodyStream.DrainAsync(token);
 
-                await bodyStream.CopyToAsync(Stream.Null, token);
-
-                if (updateStat)
+                if (updateStatistics)
                 {
+                    Interlocked.Add(ref _totalReceived, totalBodySize);
+
                     if (response.IsSuccessStatusCode)
                     {
                         Interlocked.Increment(ref _successCount);
@@ -125,14 +129,14 @@ namespace floody
             }
             catch
             {
-                if (updateStat)
+                if (updateStatistics)
                 {
                     Interlocked.Increment(ref _networkFailCount);
                 }
             }
             finally
             {
-                if (updateStat)
+                if (updateStatistics)
                 {
                     Interlocked.Increment(ref _count);
                 }
