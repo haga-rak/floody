@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json.Serialization;
 
 namespace floody;
 
@@ -27,12 +28,17 @@ public class HttpSettings
         AdditionalHeaders = additionalHeaders;
     }
 
+    [JsonIgnore]
     public Uri Uri { get; }
+
+    [JsonPropertyName("uri")]
+    public string UriString => Uri.ToString();
 
     public string Method { get; }
 
     public int ConcurrentConnection { get; }
 
+    [JsonIgnore]
     public WebProxy? WebProxy { get; }
 
     public IReadOnlyCollection<Header> AdditionalHeaders { get;  }

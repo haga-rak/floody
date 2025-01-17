@@ -1,36 +1,58 @@
+using System.Text.Json;
+using System.Xml.Linq;
+
 namespace floody
 {
     public class FloodResult
     {
-        public FloodResult(int count, int successCount, int failCount, int networkFailCount)
+        public FloodResult(int count, int successCount, int httpFailCount, int networkFailCount, FloodyOptions options, long totalReceivedBytes)
         {
             Count = count;
             SuccessCount = successCount;
-            FailCount = failCount;
+            HttpFailCount = httpFailCount;
             NetworkFailCount = networkFailCount;
+            Options = options;
+            TotalReceivedBytes = totalReceivedBytes;
         }
+        public FloodyOptions Options { get; }
 
         public int Count { get; }
 
         public int SuccessCount { get; }
 
-        public int FailCount { get; }
+        public int HttpFailCount { get; }
 
         public int NetworkFailCount { get; }
 
-        public string PrettyFormat(FloodyOptions floodOptions)
+        public double RequestPerSeconds
         {
-            var totalDuration = floodOptions.StartupSettings.Duration;
+            get
+            {
+                var totalDuration = Options.StartupSettings.Duration;
+                var reqPerSeconds = SuccessCount / totalDuration.TotalSeconds;
+                return reqPerSeconds;
+            }
+        }
 
-            var reqPerSeconds = SuccessCount / totalDuration.TotalSeconds;
+        public long TotalReceivedBytes { get; }
 
-            // Format as pretty table for console 
+        public string TotalReceivedPerSeconds
+        {
+            get
+            {
+                var totalDuration = Options.StartupSettings.Duration;
+                var reqPerSeconds = TotalReceivedBytes / totalDuration.TotalSeconds;
+                return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
+            }
+        }
 
-            return $"Total requests: {Count}\n" +
-                   $"Success: {SuccessCount}\n" +
-                   $"Fail: {FailCount}\n" +
-                   $"Network Fail: {NetworkFailCount}\n" +
-                   $"Requests per seconds: {reqPerSeconds}";
+
+        public string PrettyFormat()
+        {
+            return JsonSerializer.Serialize(this, new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                WriteIndented = true
+            });
         }
     }
 }

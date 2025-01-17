@@ -9,9 +9,11 @@ namespace floody
         private int _successCount;
         private int _failCount;
         private int _networkFailCount;
+        private long _totalReceived;
+
         private readonly HttpClient _client;
 
-        private readonly SemaphoreSlim _maxHttpClient = new(128);
+        private readonly SemaphoreSlim _maxHttpClient;
 
         public FloodExecutor(FloodyOptions options)
         {
@@ -23,7 +25,9 @@ namespace floody
                 httpClientHandler.Proxy = options.HttpSettings.WebProxy;
                 httpClientHandler.UseProxy = true;
             }
-            
+
+            _maxHttpClient = new SemaphoreSlim(Math.Max(128, options.HttpSettings.ConcurrentConnection) + 4);
+
             httpClientHandler.ServerCertificateCustomValidationCallback =
                 (_, _, _, _) => true;
 
@@ -57,10 +61,10 @@ namespace floody
             Console.WriteLine("Warming up...for {0}s", (int) _options.StartupSettings.WarmupDuration.TotalSeconds);
             await InternalExecute(_options.StartupSettings.WarmupDuration, false);
 
-            Console.WriteLine("Flood starting...for {0}s", (int)_timeout.TotalSeconds);
+            Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
-            return new FloodResult(_count, _successCount, _failCount, _networkFailCount);
+            return new FloodResult(_count, _successCount, _failCount, _networkFailCount, _options, _totalReceived);
         }
 
         private async Task InternalExecute(TimeSpan timeout, bool updateStat)
@@ -85,29 +89,23 @@ namespace floody
             }
         }
 
-        private async ValueTask InternalQueryAsync(CancellationToken token, bool updateStat)
+        private async ValueTask InternalQueryAsync(CancellationToken token, bool updateStatistics)
         {
             try
             {
                 var requestMessage = CreateRequest(_options);
-
+                
                 using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead,
                     token);
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
+                
+                var totalBodySize = await bodyStream.DrainAsync(token);
 
-#if DEBUG
-                if ((int)response.StatusCode == 528)
+                if (updateStatistics)
                 {
-                    var bodyString = await response.Content.ReadAsStringAsync(token);
-                }
-#endif
+                    Interlocked.Add(ref _totalReceived, totalBodySize);
 
-
-                await bodyStream.CopyToAsync(Stream.Null, token);
-
-                if (updateStat)
-                {
                     if (response.IsSuccessStatusCode)
                     {
                         Interlocked.Increment(ref _successCount);
@@ -131,14 +129,14 @@ namespace floody
             }
             catch
             {
-                if (updateStat)
+                if (updateStatistics)
                 {
                     Interlocked.Increment(ref _networkFailCount);
                 }
             }
             finally
             {
-                if (updateStat)
+                if (updateStatistics)
                 {
                     Interlocked.Increment(ref _count);
                 }
