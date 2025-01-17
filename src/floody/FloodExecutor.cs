@@ -5,7 +5,7 @@ namespace floody
         private readonly FloodyOptions _options;
         private readonly TimeSpan _timeout;
 
-        private int _count; 
+        private int _count;
         private int _successCount;
         private int _failCount;
         private int _networkFailCount;
@@ -19,7 +19,7 @@ namespace floody
         {
             _options = options;
             var httpClientHandler = new HttpClientHandler();
-            
+
             if (options.HttpSettings.WebProxy != null)
             {
                 httpClientHandler.Proxy = options.HttpSettings.WebProxy;
@@ -37,7 +37,7 @@ namespace floody
 
             _client = new HttpClient(httpClientHandler)
             {
-                
+
             };
 
             _timeout = options.StartupSettings.Duration;
@@ -58,7 +58,7 @@ namespace floody
 
         public async Task<FloodResult> ExecuteAsync()
         {
-            Console.WriteLine("Warming up...for {0}s", (int) _options.StartupSettings.WarmupDuration.TotalSeconds);
+            Console.WriteLine("Warming up...for {0}s", (int)_options.StartupSettings.WarmupDuration.TotalSeconds);
             await InternalExecute(_options.StartupSettings.WarmupDuration, false);
 
             Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
@@ -94,12 +94,12 @@ namespace floody
             try
             {
                 var requestMessage = CreateRequest(_options);
-                
+
                 using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead,
                     token);
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
-                
+
                 var totalBodySize = await bodyStream.DrainAsync(token);
 
                 if (updateStatistics)

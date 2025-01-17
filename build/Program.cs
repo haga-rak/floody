@@ -18,13 +18,13 @@ public class Program
         var serverExecutable = Path.Combine(outputServer, "floodys");
         var clientExecutable = Path.Combine(outputClient, "floody");
 
-        Target("build-server", () => 
+        Target("build-server", () =>
             RunAsync("dotnet", "build --configuration Release --verbosity quiet src/floody.server"));
 
-        Target("publish-server", DependsOn("build-server"), 
+        Target("publish-server", DependsOn("build-server"),
             () => RunAsync("dotnet", $"publish --configuration Release --verbosity quiet src/floody.server -o {outputServer}"));
 
-        Target("build-client", () => 
+        Target("build-client", () =>
             RunAsync("dotnet", "build --configuration Release --verbosity quiet src/floody"));
 
         Target("publish-client", DependsOn("build-client"),

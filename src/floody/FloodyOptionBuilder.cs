@@ -24,7 +24,7 @@ public static class FloodyOptionBuilder
             "Additional HTTP headers", Array.Empty<Header>());
 
         yield return CreateOption(new[] { "--output-file", "-o" }, ParseOutputFile, ArgumentArity.ZeroOrOne,
-            "Output benchmark result into a json file", (FileInfo?) null);
+            "Output benchmark result into a json file", (FileInfo?)null);
 
         yield return CreateOption(new[] { "--duration", "-d" }, ParseDuration, ArgumentArity.ZeroOrOne,
             "Test duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(30));
@@ -33,7 +33,7 @@ public static class FloodyOptionBuilder
             "Warm up duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(5));
 
     }
-    
+
     private static Option<T> CreateOption<T>(string[] aliases, ParseArgument<T> parseArgument,
         ArgumentArity argumentArity, string description, T defaultValue = default(T))
     {
@@ -204,7 +204,7 @@ public static class FloodyOptionBuilder
 
         return value;
     }
-    
+
     public static IReadOnlyCollection<Header> ParseHeaders(ArgumentResult result)
     {
         var rawHeaders = result.Tokens.Select(s => s.Value).ToList();
@@ -227,7 +227,7 @@ public static class FloodyOptionBuilder
 
     public static WebProxy ParseWebProxy(ArgumentResult result)
     {
-        var rawProxy =  result.Tokens.First().Value;
+        var rawProxy = result.Tokens.First().Value;
 
         if (Uri.TryCreate(rawProxy, UriKind.Absolute, out var uri))
         {

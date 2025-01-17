@@ -13,7 +13,7 @@ public class FloodyOptions
 
     public HttpSettings HttpSettings { get; }
 
-    public StartupSettings StartupSettings { get;  }
+    public StartupSettings StartupSettings { get; }
 }
 
 public class HttpSettings
@@ -41,7 +41,7 @@ public class HttpSettings
     [JsonIgnore]
     public WebProxy? WebProxy { get; }
 
-    public IReadOnlyCollection<Header> AdditionalHeaders { get;  }
+    public IReadOnlyCollection<Header> AdditionalHeaders { get; }
 }
 
 

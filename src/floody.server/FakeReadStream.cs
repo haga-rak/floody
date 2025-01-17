@@ -27,7 +27,7 @@ public class FakeReadStream : Stream
     {
         if (_infiniteStream)
         {
-            Array.Fill(buffer, (byte) 70, offset, count);
+            Array.Fill(buffer, (byte)70, offset, count);
 
             return count;
         }
@@ -39,10 +39,10 @@ public class FakeReadStream : Stream
             return 0;
         }
 
-        var read = (int) Math.Min(remaining, count);
+        var read = (int)Math.Min(remaining, count);
         _position += read;
 
-        Array.Fill(buffer, (byte) 70, offset, read);
+        Array.Fill(buffer, (byte)70, offset, read);
 
         return read;
     }
@@ -62,7 +62,7 @@ public class FakeReadStream : Stream
         throw new NotSupportedException("This stream does not support writing.");
     }
 
-    public override bool CanRead  => true;
+    public override bool CanRead => true;
     public override bool CanSeek => false;
     public override bool CanWrite => false;
 
