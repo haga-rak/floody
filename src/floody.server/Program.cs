@@ -1,6 +1,7 @@
+using fluxzy.bench.kestrel;
 using Microsoft.AspNetCore.Mvc;
 
-namespace fluxzy.bench.kestrel
+namespace floody.server
 {
     public class Program
     {
