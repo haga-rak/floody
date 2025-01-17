@@ -1,0 +1,6 @@
+@fluxzy.bench.kestrel_HostAddress = http://localhost:5188
+
+GET {{fluxzy.bench.kestrel_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

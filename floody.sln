@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody", "src\floody\floody.csproj", "{BCA98A41-BA18-4F77-A12A-180A5306C483}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{67B2E6B8-8DC7-4F9D-A16E-2A03FFE91F12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.server", "src\floody.server\floody.server.csproj", "{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,10 @@ Global
 		{BCA98A41-BA18-4F77-A12A-180A5306C483}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCA98A41-BA18-4F77-A12A-180A5306C483}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCA98A41-BA18-4F77-A12A-180A5306C483}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
