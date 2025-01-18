@@ -5,6 +5,11 @@ namespace floody
 {
     public class FloodResult
     {
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
+        {
+            WriteIndented = true
+        };
+
         public FloodResult(int count, int successCount, int httpFailCount, int networkFailCount, FloodyOptions options, long totalReceivedBytes)
         {
             Count = count;
@@ -49,10 +54,7 @@ namespace floody
 
         public string PrettyFormat()
         {
-            return JsonSerializer.Serialize(this, new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                WriteIndented = true
-            });
+            return JsonSerializer.Serialize(this, JsonSerializerOptions);
         }
     }
 }

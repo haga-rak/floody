@@ -5,7 +5,7 @@ namespace floody
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             var symbols = FloodyOptionBuilder.EnumerateCommandLineSymbols().ToList();
 
@@ -51,7 +51,7 @@ namespace floody
                 }
             });
 
-            await rootCommand.InvokeAsync(args);
+            return await rootCommand.InvokeAsync(args);
         }
 
     }

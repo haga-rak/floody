@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "build": {
+      "commandName": "Project",
+      "commandLineArgs": "benchmark",
+      "workingDirectory": "E:\\_source\\floody"
+    }
+  }
+}
