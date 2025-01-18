@@ -25,19 +25,24 @@ public class Program
 
         var listenUrl = Environment.GetEnvironmentVariable("FLOODYS_LISTEN_URL") ?? "http://127.0.0.1:0";
 
+        var disableAot = string.Equals(Environment.GetEnvironmentVariable("DISABLE_AOT"), "1",
+            StringComparison.OrdinalIgnoreCase);
+
+        var disableAotString = disableAot ? "-p:PublishAot=false" : string.Empty;
+
         var serverPortNumber = -1;
 
         Target("build-server", () =>
-            RunAsync("dotnet", "build --configuration Release --verbosity quiet src/floody.server", cancellationToken: exitToken));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken));
 
         Target("publish-server", DependsOn("build-server"),
-            () => RunAsync("dotnet", $"publish --configuration Release --verbosity quiet src/floody.server -o {outputServer}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody.server -o {outputServer}", cancellationToken: exitToken));
 
         Target("build-client", () =>
-            RunAsync("dotnet", "build --configuration Release --verbosity quiet src/floody", cancellationToken: exitToken));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody", cancellationToken: exitToken));
 
         Target("publish-client", DependsOn("build-client"),
-            () => RunAsync("dotnet", $"publish --configuration Release --verbosity quiet src/floody -o {outputClient}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody -o {outputClient}", cancellationToken: exitToken));
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
 
