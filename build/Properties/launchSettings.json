@@ -2,7 +2,7 @@
   "profiles": {
     "build": {
       "commandName": "Project",
-      "commandLineArgs": "benchmark",
+      "commandLineArgs": "benchmark \"floody: -d 1\"",
       "workingDirectory": "E:\\_source\\floody"
     }
   }

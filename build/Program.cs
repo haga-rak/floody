@@ -53,7 +53,7 @@ public class Program
         Target("benchmark", DependsOn("publish-client", "start-server"),
             async () =>
             {
-                var finalUrl = listenUrl;
+                string finalUrl;
 
                 if (!Uri.TryCreate(listenUrl, UriKind.Absolute, out var uri))
                 {

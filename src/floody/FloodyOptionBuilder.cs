@@ -31,7 +31,6 @@ public static class FloodyOptionBuilder
 
         yield return CreateOption(new[] { "--warm-up", "-w" }, ParseDuration, ArgumentArity.ZeroOrOne,
             "Warm up duration (unit accepted: ms, s, mn, h)", TimeSpan.FromSeconds(5));
-
     }
 
     private static Option<T> CreateOption<T>(string[] aliases, ParseArgument<T> parseArgument,

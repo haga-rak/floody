@@ -25,6 +25,8 @@ namespace floody
 
                     var result = await floody.ExecuteAsync();
 
+                    var prettyMessage = result.PrettyFormat();
+
                     if (startupSettings.OutputFile != null)
                     {
                         var parentDirectory = startupSettings.OutputFile.Directory;
@@ -34,14 +36,9 @@ namespace floody
                             parentDirectory.Create();
                         }
 
-                        await File.WriteAllTextAsync(startupSettings.OutputFile.FullName,
-                            JsonSerializer.Serialize(result, new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                            {
-                                WriteIndented = true
-                            }));
+                        await File.WriteAllTextAsync(startupSettings.OutputFile.FullName, prettyMessage);
                     }
 
-                    var prettyMessage = result.PrettyFormat();
                     Console.WriteLine(prettyMessage);
                 }
                 catch (Exception e)

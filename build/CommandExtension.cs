@@ -12,6 +12,10 @@ namespace build
 
             await foreach (var line in input)
             {
+#if DEBUG
+                Console.WriteLine(line);
+#endif
+
                 var match = regex.Match(line);
 
                 if (match.Success)
@@ -45,7 +49,11 @@ namespace build
                 yield return str;
             }
 
-            await process.StandardOutput.ReadToEndAsync(token);
+            var fullText = await process.StandardOutput.ReadToEndAsync(token);
+            
+#if DEBUG
+            Console.WriteLine(fullText);
+#endif
         }
     }
 }
