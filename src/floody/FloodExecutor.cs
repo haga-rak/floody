@@ -35,10 +35,7 @@ namespace floody
 
             CreateRequest(options);
 
-            _client = new HttpClient(httpClientHandler)
-            {
-
-            };
+            _client = new HttpClient(httpClientHandler);
 
             _timeout = options.StartupSettings.Duration;
         }
@@ -60,6 +57,9 @@ namespace floody
         {
             Console.WriteLine("Warming up...for {0}s", (int)_options.StartupSettings.WarmupDuration.TotalSeconds);
             await InternalExecute(_options.StartupSettings.WarmupDuration, false);
+
+            // wait for 1s
+            await Task.Delay(1000);
 
             Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
@@ -95,7 +95,7 @@ namespace floody
             {
                 var requestMessage = CreateRequest(_options);
 
-                using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead,
+                using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead,
                     token);
 
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);

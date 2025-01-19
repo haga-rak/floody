@@ -22,9 +22,7 @@ public class Program
 
         using var exitTokenSource = new CancellationTokenSource();
         var exitToken = exitTokenSource.Token;
-
-        var listenUrl = Environment.GetEnvironmentVariable("FLOODYS_LISTEN_URL") ?? "http://127.0.0.1:0";
-
+        
         var disableAot = string.Equals(Environment.GetEnvironmentVariable("DISABLE_AOT"), "1",
             StringComparison.OrdinalIgnoreCase);
 
@@ -46,27 +44,36 @@ public class Program
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
 
-        Target("start-server", DependsOn("publish-server"), 
+        Target("start-server-http", DependsOn("publish-server"), 
             async () =>
             {
                 serverPortNumber = await CommandExtension
-                    .ReadBuffered(serverExecutable, $"--urls={listenUrl}", workingDirectory: outputServer,
+                    .ReadBuffered(serverExecutable, $"", workingDirectory: outputServer,
                         exitToken)
-                    .WaitForPortNumber();
+                    .WaitForPortNumber("http");
             });
 
-        Target("benchmark", DependsOn("publish-client", "start-server"),
+        Target("start-server-https", DependsOn("publish-server"), 
             async () =>
             {
-                string finalUrl;
+                serverPortNumber = await CommandExtension
+                    .ReadBuffered(serverExecutable, $"", workingDirectory: outputServer,
+                        exitToken)
+                    .WaitForPortNumber("https");
+            });
 
-                if (!Uri.TryCreate(listenUrl, UriKind.Absolute, out var uri))
-                {
-                    throw new ArgumentException("Invalid uri format for server");
-                }
+        Target("benchmark-http", DependsOn("publish-client", "start-server-http"),
+            async () =>
+            {
+                var finalUrl = $"http://127.0.0.1:{serverPortNumber}";
+                var clientArgs = $"{finalUrl} {floodyArgs}";
+                await RunAsync(clientExecutable, clientArgs, cancellationToken: exitToken, noEcho: false);
+            });
 
-                finalUrl = $"{uri.Scheme}://{uri.Host}:{serverPortNumber}";
-
+        Target("benchmark-https", DependsOn("publish-client", "start-server-https"),
+            async () =>
+            {
+                var finalUrl = $"https://127.0.0.1:{serverPortNumber}";
                 var clientArgs = $"{finalUrl} {floodyArgs}";
                 await RunAsync(clientExecutable, clientArgs, cancellationToken: exitToken, noEcho: false);
             });

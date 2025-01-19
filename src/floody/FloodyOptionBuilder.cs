@@ -34,7 +34,7 @@ public static class FloodyOptionBuilder
     }
 
     private static Option<T> CreateOption<T>(string[] aliases, ParseArgument<T> parseArgument,
-        ArgumentArity argumentArity, string description, T defaultValue = default(T))
+        ArgumentArity argumentArity, string description, T? defaultValue = default(T))
     {
         var option = new Option<T>(aliases, parseArgument: parseArgument)
         {

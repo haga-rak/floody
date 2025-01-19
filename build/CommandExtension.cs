@@ -6,9 +6,9 @@ namespace build
 {
     public static class CommandExtension
     {
-        public static async Task<int> WaitForPortNumber(this IAsyncEnumerable<string> input)
+        public static async Task<int> WaitForPortNumber(this IAsyncEnumerable<string> input, string scheme)
         {
-            var regex = new Regex(@"://.*:(?<port>\d+)$");
+            var regex = new Regex($@"{scheme}://.*:(?<port>\d+)$");
 
             await foreach (var line in input)
             {
