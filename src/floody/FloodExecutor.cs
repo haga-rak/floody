@@ -2,6 +2,8 @@ namespace floody
 {
     public class FloodExecutor
     {
+        private static readonly int MaxRequestBodyLengthBuffer = 4 * 1024 * 1024;
+        
         private readonly FloodyOptions _options;
         private readonly TimeSpan _timeout;
 
@@ -17,6 +19,8 @@ namespace floody
         private readonly HttpClient _client;
 
         private readonly SemaphoreSlim _maxHttpClient;
+
+        private readonly byte[] _requestBuffer;
 
         public FloodExecutor(FloodyOptions options)
         {
@@ -43,6 +47,9 @@ namespace floody
             _client = new HttpClient(socketHandler);
 
             _timeout = options.StartupSettings.Duration;
+            
+            var handledLength = (int) Math.Min(MaxRequestBodyLengthBuffer, options.HttpSettings.RequestBodyLength);
+            _requestBuffer = new byte[handledLength];
         }
 
         private void OnWrite(int length)
@@ -61,16 +68,30 @@ namespace floody
             }
         }
 
-        private static HttpRequestMessage CreateRequest(FloodyOptions options)
+        private HttpRequestMessage CreateRequest(FloodyOptions options)
         {
-            var requestMessage = new HttpRequestMessage(new HttpMethod(options.HttpSettings.Method),
-                options.HttpSettings.Uri);
+            var method = new HttpMethod(options.HttpSettings.Method);
+            
+            var requestMessage = options.HttpSettings.ResponseBodyLength == 0 
+                ? new HttpRequestMessage(method, options.HttpSettings.Uri) :
+                  new HttpRequestMessage(method, options.HttpSettings.Uri + $"?&length={options.HttpSettings.ResponseBodyLength}" );
 
             foreach (var header in options.HttpSettings.AdditionalHeaders)
             {
                 requestMessage.Headers.Add(header.Name, header.Value);
             }
-
+            
+            if (options.HttpSettings.RequestBodyLength > 0)
+            {
+                if (requestMessage.Method == HttpMethod.Get)
+                {
+                    // FORCE POST
+                    requestMessage.Method = HttpMethod.Post;
+                }
+                
+                requestMessage.Content = new ByteArrayContent(_requestBuffer);
+            }
+            
             return requestMessage;
         }
 

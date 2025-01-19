@@ -19,13 +19,15 @@ public class FloodyOptions
 public class HttpSettings
 {
     public HttpSettings(Uri uri, string method, int concurrentConnection,
-        WebProxy? webProxy, IReadOnlyCollection<Header> additionalHeaders)
+        WebProxy? webProxy, IReadOnlyCollection<Header> additionalHeaders, long requestBodyLength, long responseBodyLength)
     {
         Uri = uri;
         Method = method;
         ConcurrentConnection = concurrentConnection;
         WebProxy = webProxy;
         AdditionalHeaders = additionalHeaders;
+        RequestBodyLength = requestBodyLength;
+        ResponseBodyLength = responseBodyLength;
     }
 
     [JsonIgnore]
@@ -42,6 +44,10 @@ public class HttpSettings
     public WebProxy? WebProxy { get; }
 
     public IReadOnlyCollection<Header> AdditionalHeaders { get; }
+    
+    public long RequestBodyLength { get; }
+    
+    public long ResponseBodyLength { get; }
 }
 
 

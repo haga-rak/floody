@@ -35,9 +35,20 @@ namespace floody
                 return reqPerSeconds;
             }
         }
-
-        public long TotalReceivedBytes { get; }
+        
         public long TotalSentBytes { get; }
+        
+        public long TotalReceivedBytes { get; }
+
+        public string TotalSentPerSeconds
+        {
+            get
+            {
+                var totalDuration = Options.StartupSettings.Duration;
+                var reqPerSeconds = TotalSentBytes / totalDuration.TotalSeconds;
+                return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
+            }
+        }
 
         public string TotalReceivedPerSeconds
         {
@@ -49,16 +60,6 @@ namespace floody
             }
         }
         
-        public string TotalSentPerSeconds
-        {
-            get
-            {
-                var totalDuration = Options.StartupSettings.Duration;
-                var reqPerSeconds = TotalSentBytes / totalDuration.TotalSeconds;
-                return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
-            }
-        }
-
         public string PrettyFormat()
         {
             return JsonSerializer.Serialize(this, FloodySerializationContext.Default.FloodResult);

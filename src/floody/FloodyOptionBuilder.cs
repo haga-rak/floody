@@ -19,6 +19,12 @@ public static class FloodyOptionBuilder
 
         yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
             "Address of HTTP proxy");
+        
+        yield return CreateOption(new[] { "--request-body-length", "-r" }, ParseLength, ArgumentArity.ZeroOrOne,
+            "Request body length", 0L);
+        
+        yield return CreateOption(new[] { "--response-body-length", "-l" }, ParseLength, ArgumentArity.ZeroOrOne,
+            "Response body length (sends `length` as query string, works only when used with floodys)", 0L);
 
         yield return CreateOption(new[] { "--header", "-H" }, ParseHeaders, ArgumentArity.ZeroOrMore,
             "Additional HTTP headers", Array.Empty<Header>());
@@ -88,8 +94,15 @@ public static class FloodyOptionBuilder
             .GetValueForOption(
                 symbols.OfType<Option<IReadOnlyCollection<Header>>>().First(a => a.Name == "header"))!;
 
+        var requestBodyLength = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<long>>().First(a => a.Name == "request-body-length"));
+        
+        var responseBodyLength = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<long>>().First(a => a.Name == "response-body-length"));
 
-        return new HttpSettings(uri, method, concurrentConnection, webProxy, headers);
+        return new HttpSettings(uri, method, concurrentConnection, webProxy, headers, requestBodyLength, responseBodyLength);
     }
 
     public static StartupSettings CreateStartupSettings(InvocationContext invocationContext,
@@ -110,6 +123,24 @@ public static class FloodyOptionBuilder
         return new StartupSettings(duration, warmup, outputFile);
     }
 
+    
+    public static long ParseLength(ArgumentResult result)
+    {
+        var t = result.Tokens.Select(token => token.Value).First();
+
+        if (!long.TryParse(t, out var value))
+        {
+            throw new ArgumentException("Invalid length format");
+        }
+
+        if (value < 0)
+        {
+            throw new ArgumentException("Length must be greater than 0");
+        }
+        
+        return value;
+    }
+    
     public static Uri ParseUri(ArgumentResult result)
     {
         var t = result.Tokens.Select(token => token.Value).First();
