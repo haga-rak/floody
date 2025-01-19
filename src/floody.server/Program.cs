@@ -1,11 +1,12 @@
 using fluxzy.bench.kestrel;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace floody.server
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,33 @@ namespace floody.server
                 (HttpContext _,
                 [FromQuery] int length = 0) => Results.Stream(new FakeReadStream(length)));
 
-            app.Run();
+            await app.StartAsync();
+
+            // get pid from args 
+
+            await WaitShutdownOrParentToDie(args, app);
+        }
+
+        private static async Task WaitShutdownOrParentToDie(string[] args, WebApplication app)
+        {
+            var haltTasks = new List<Task>()
+            {
+                app.WaitForShutdownAsync()
+            };
+
+            var parentId = args.FirstOrDefault(a => a.StartsWith($"--pid="));
+
+            if (parentId != null)
+            {
+                var pid = int.Parse(parentId.Split("=")[1]);
+
+                Process parentProcess = Process.GetProcessById(pid);
+
+
+                haltTasks.Add(parentProcess.WaitForExitAsync());
+            }
+
+            await Task.WhenAny(haltTasks);
         }
     }
 }

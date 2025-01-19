@@ -1,5 +1,7 @@
 // See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
+
 namespace build;
 
 using SimpleExec;
@@ -29,6 +31,7 @@ public class Program
         var disableAotString = disableAot ? "-p:PublishAot=false" : string.Empty;
 
         var serverPortNumber = -1;
+        var processId = Process.GetCurrentProcess().Id;
 
         Target("build-server", () =>
             RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken));
@@ -48,7 +51,7 @@ public class Program
             async () =>
             {
                 serverPortNumber = await CommandExtension
-                    .ReadBuffered(serverExecutable, $"", workingDirectory: outputServer,
+                    .ReadBuffered(serverExecutable, $"--pid={processId}", workingDirectory: outputServer,
                         exitToken)
                     .WaitForPortNumber("http");
             });
@@ -57,7 +60,7 @@ public class Program
             async () =>
             {
                 serverPortNumber = await CommandExtension
-                    .ReadBuffered(serverExecutable, $"", workingDirectory: outputServer,
+                    .ReadBuffered(serverExecutable, $"--pid={processId}", workingDirectory: outputServer,
                         exitToken)
                     .WaitForPortNumber("https");
             });
