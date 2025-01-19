@@ -4,25 +4,18 @@ namespace floody;
 
 public static class StreamHelper
 {
+    private static readonly byte[] SharedBuffer = new byte[32 * 1024];
+    
     public static async ValueTask<long> DrainAsync(this Stream stream, CancellationToken cancellationToken)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(8192);
+        var total = 0L;
+        int read;
 
-        try
+        while ((read = await stream.ReadAsync(SharedBuffer, cancellationToken)) > 0)
         {
-            var total = 0L;
-            int read;
-
-            while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
-            {
-                total += read;
-            }
-
-            return total;
+            total += read;
         }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+
+        return total;
     }
 }
