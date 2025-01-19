@@ -10,6 +10,9 @@ namespace floody
         private int _failCount;
         private int _networkFailCount;
         private long _totalReceived;
+        private long _totalSent;
+        
+        private bool _startMeasure; 
 
         private readonly HttpClient _client;
 
@@ -18,26 +21,44 @@ namespace floody
         public FloodExecutor(FloodyOptions options)
         {
             _options = options;
-            var httpClientHandler = new HttpClientHandler();
+            var socketHandler = new SocketsHttpHandler();
 
             if (options.HttpSettings.WebProxy != null)
             {
-                httpClientHandler.Proxy = options.HttpSettings.WebProxy;
-                httpClientHandler.UseProxy = true;
+                socketHandler.Proxy = options.HttpSettings.WebProxy;
+                socketHandler.UseProxy = true;
             }
 
-            _maxHttpClient = new SemaphoreSlim(Math.Max(128, options.HttpSettings.ConcurrentConnection) + 4);
-
-            httpClientHandler.ServerCertificateCustomValidationCallback =
+            _maxHttpClient = new SemaphoreSlim(Math.Max(256, options.HttpSettings.ConcurrentConnection) + 4);
+            
+            socketHandler.SslOptions.RemoteCertificateValidationCallback =
                 (_, _, _, _) => true;
 
-            httpClientHandler.MaxConnectionsPerServer = options.HttpSettings.ConcurrentConnection;
+            socketHandler.MaxConnectionsPerServer = options.HttpSettings.ConcurrentConnection;
+
+            socketHandler.PlaintextStreamFilter = (context, token) => new ValueTask<Stream>(new ByteCounterStream(context.PlaintextStream, OnRead, OnWrite));
 
             CreateRequest(options);
 
-            _client = new HttpClient(httpClientHandler);
+            _client = new HttpClient(socketHandler);
 
             _timeout = options.StartupSettings.Duration;
+        }
+
+        private void OnWrite(int length)
+        {
+            if (_startMeasure)
+            {
+                Interlocked.Add(ref _totalSent, length);
+            }
+        }
+
+        private void OnRead(int length)
+        {
+            if (_startMeasure)
+            {
+                Interlocked.Add(ref _totalReceived, length);
+            }
         }
 
         private static HttpRequestMessage CreateRequest(FloodyOptions options)
@@ -60,11 +81,14 @@ namespace floody
 
             // wait for 1s
             await Task.Delay(1000);
+            _startMeasure = true;
 
             Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
-            return new FloodResult(_count, _successCount, _failCount, _networkFailCount, _options, _totalReceived);
+            return new FloodResult(_count, _successCount, 
+                _failCount, _networkFailCount, 
+                _options, _totalReceived, _totalSent);
         }
 
         private async Task InternalExecute(TimeSpan timeout, bool updateStat)
@@ -97,15 +121,12 @@ namespace floody
 
                 using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead,
                     token);
-
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
 
-                var totalBodySize = await bodyStream.DrainAsync(token);
+                _ = await bodyStream.DrainAsync(token);
 
                 if (updateStatistics)
                 {
-                    Interlocked.Add(ref _totalReceived, totalBodySize);
-
                     if (response.IsSuccessStatusCode)
                     {
                         Interlocked.Increment(ref _successCount);

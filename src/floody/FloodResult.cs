@@ -5,7 +5,8 @@ namespace floody
 {
     public class FloodResult
     {
-        public FloodResult(int count, int successCount, int httpFailCount, int networkFailCount, FloodyOptions options, long totalReceivedBytes)
+        public FloodResult(int count, int successCount, int httpFailCount, int networkFailCount, FloodyOptions options, long totalReceivedBytes,
+            long totalSentBytes)
         {
             Count = count;
             SuccessCount = successCount;
@@ -13,6 +14,7 @@ namespace floody
             NetworkFailCount = networkFailCount;
             Options = options;
             TotalReceivedBytes = totalReceivedBytes;
+            TotalSentBytes = totalSentBytes;
         }
         public FloodyOptions Options { get; }
 
@@ -35,6 +37,7 @@ namespace floody
         }
 
         public long TotalReceivedBytes { get; }
+        public long TotalSentBytes { get; }
 
         public string TotalReceivedPerSeconds
         {
@@ -45,7 +48,16 @@ namespace floody
                 return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
             }
         }
-
+        
+        public string TotalSentPerSeconds
+        {
+            get
+            {
+                var totalDuration = Options.StartupSettings.Duration;
+                var reqPerSeconds = TotalSentBytes / totalDuration.TotalSeconds;
+                return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
+            }
+        }
 
         public string PrettyFormat()
         {
