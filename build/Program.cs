@@ -14,7 +14,7 @@ public class Program
     {
         args = FixArguments(args,out var floodyArgs);
 
-        var workRootPath = $"_work/{DateTime.Now.ToString("yyyyMMddYYmmss")}";
+        var workRootPath = $"_work/out";
 
         var outputServer = Path.Combine(workRootPath, "floodys");
         var outputClient = Path.Combine(workRootPath, "floody");
@@ -34,13 +34,13 @@ public class Program
         var processId = Process.GetCurrentProcess().Id;
 
         Target("build-server", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken, noEcho: true));
 
         Target("publish-server", DependsOn("build-server"),
             () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody.server -o {outputServer}", cancellationToken: exitToken));
 
         Target("build-client", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody", cancellationToken: exitToken));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody", cancellationToken: exitToken, noEcho: true));
 
         Target("publish-client", DependsOn("build-client"),
             () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody -o {outputClient}", cancellationToken: exitToken));
