@@ -15,7 +15,7 @@ public static class FloodyOptionBuilder
             "Method to used", "GET");
 
         yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
-                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 8);
+                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 16);
 
         yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
             "Address of HTTP proxy");

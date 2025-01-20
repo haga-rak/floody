@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 # Build output files
 _work/
+
+# Results of bench 
+_results/

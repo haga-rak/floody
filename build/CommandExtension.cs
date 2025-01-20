@@ -2,58 +2,59 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
-namespace build
-{
-    public static class CommandExtension
-    {
-        public static async Task<int> WaitForPortNumber(this IAsyncEnumerable<string> input, string scheme)
-        {
-            var regex = new Regex($@"{scheme}://.*:(?<port>\d+)$");
+namespace build;
 
-            await foreach (var line in input)
-            {
+public static class CommandExtension
+{
+    public static async Task<int> WaitForPortNumber(this IAsyncEnumerable<string> input, string scheme)
+    {
+        // will fail when Ms will change kestrel's welcome message
+            
+        var regex = new Regex($@"{scheme}://.*:(?<port>\d+)$");
+
+        await foreach (var line in input)
+        {
 #if DEBUG
-                Console.WriteLine(line);
+            Console.WriteLine(line);
 #endif
 
-                var match = regex.Match(line);
+            var match = regex.Match(line);
 
-                if (match.Success)
-                {
-                    return int.Parse(match.Groups["port"].Value);
-                }
+            if (match.Success)
+            {
+                return int.Parse(match.Groups["port"].Value);
             }
-
-            throw new InvalidOperationException("Port not found");
         }
 
-        public static async IAsyncEnumerable<string> ReadBuffered(string path,
-            string args, string workingDirectory, 
-            [EnumeratorCancellation] CancellationToken token)
+        throw new InvalidOperationException("Port not found");
+    }
+
+    public static async IAsyncEnumerable<string> ReadBuffered(string path,
+        string args, string workingDirectory, 
+        [EnumeratorCancellation] CancellationToken token)
+    {
+        var startInfo = new ProcessStartInfo
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = path,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = workingDirectory
-            };
+            FileName = path,
+            Arguments = args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = false,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = workingDirectory
+        };
 
-            var process = Process.Start(startInfo)!;
+        var process = Process.Start(startInfo)!;
 
-            while (!token.IsCancellationRequested && await process.StandardOutput.ReadLineAsync(token) is { } str)
-            {
-                yield return str;
-            }
+        while (!token.IsCancellationRequested && await process.StandardOutput.ReadLineAsync(token) is { } str)
+        {
+            yield return str;
+        }
 
-            var fullText = await process.StandardOutput.ReadToEndAsync(token);
+        var fullText = await process.StandardOutput.ReadToEndAsync(token);
             
 #if DEBUG
-            Console.WriteLine(fullText);
+        Console.WriteLine(fullText);
 #endif
-        }
     }
 }
