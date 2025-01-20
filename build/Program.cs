@@ -1,5 +1,6 @@
 // See https://aka.ms/new-console-template for more information
 
+using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
 using build.Benchs;
@@ -16,11 +17,13 @@ public class Program
     private static string _outputServer = null!;
     private static string _serverExecutable = null!;
     private static string _clientExecutable = null!;
+    private static string? _floodyTarget = null!;
 
     public static async Task Main(string[] args)
     {
         args = ExtractFloodysArgs(args,out var floodyArgs);
         args = ExtractBenchArgs(args,out var proxyUris);
+        args = ExtractFloodysTarget(args,out _floodyTarget);
 
         var workRootPath = $"_work/out";
 
@@ -131,7 +134,9 @@ public class Program
     private static async Task RunTest(string? floodyArgs, bool isHttps, int port, CancellationToken exitToken)
     {
         var scheme = isHttps ? "https" : "http";
-        var finalUrl = $"{scheme}://127.0.0.1:{port}";
+        var host = _floodyTarget ?? "127.0.0.1";
+
+        var finalUrl = $"{scheme}://{host}:{port}";
         var clientArgs = $"{finalUrl} {floodyArgs}";
         await RunAsync(_clientExecutable, clientArgs, cancellationToken: exitToken, noEcho: false);
     }
@@ -144,7 +149,7 @@ public class Program
 
         foreach (var item in originalList.ToList())
         {
-            if (item.StartsWith("floody:"))
+            if (item.StartsWith("floody-options:") || item.StartsWith("floodyoptions:"))
             {
                 originalList.Remove(item);
                 var finalValue = item.Split(":", 2)[1];
@@ -179,11 +184,30 @@ public class Program
                     
                     proxyUris.Add(uri);
                 }
-
-
             }
         }
 
         return originalList.ToArray();
     }
+
+
+    private static string[] ExtractFloodysTarget(string[] originalArgs, out string? floodyArgs)
+    {
+        var originalList = originalArgs.ToList();
+
+        floodyArgs = null;
+
+        foreach (var item in originalList.ToList())
+        {
+            if (item.StartsWith("floody-target:") || item.StartsWith("floodytarget:"))
+            {
+                originalList.Remove(item);
+                var finalValue = item.Split(":", 2)[1];
+                floodyArgs = finalValue;
+            }
+        }
+
+        return originalList.ToArray();
+    }
+
 }
