@@ -91,14 +91,14 @@ namespace build.Benchs
             }
         }
 
-        private static string GetFormattedDifference(double nbA, double nbB)
+        private static string GetFormattedDifference(double nbB, double nbA)
         {
             if (nbA == 0)
             {
                 return "/";
             }
 
-            var proportion = (nbB - nbA) / nbA * 100;
+            var proportion = (nbB - nbA) * 100 / nbA ;
             return $"{proportion:F}%";
         }
 
