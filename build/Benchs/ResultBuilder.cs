@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using floody.common;
+using HardwareInformation;
 
 namespace build.Benchs
 {
@@ -21,11 +22,14 @@ namespace build.Benchs
             var groupByTestCases =
                 results.GroupBy(g => g.Configuration.GetGroupingKey);
 
+            MachineInformation info = MachineInformationGatherer.GatherInformation(true);
+            var ramBytes = FormatHelper.FormatBytes(info.RAMSticks.Sum(s => (double) s.Capacity));
+
             foreach (var group in groupByTestCases)
             {
                 var builder = new StringBuilder();
 
-                builder.AppendLine(group.Key);
+                builder.AppendLine("Test settings: " + group.Key + $" ({info.Cpu.Name} {ramBytes})");
                 builder.AppendLine("********");
 
                 // build header 
@@ -62,10 +66,40 @@ namespace build.Benchs
                         ));
                 }
 
+                // Print difference 
+
+                var proxyGroups = group.Where(g => g.Configuration.ProxyUri != null).ToList();
+
+                if (proxyGroups.Count == 2)
+                {
+                    var ordered = proxyGroups.OrderBy(g => g.Configuration.ProxyUri?.ToString()).ToList();
+
+                    builder.AppendLine(
+                        CreateMarkdownLine(
+                            "Deviation",
+                            GetFormattedDifference(ordered[0].Result.Count, ordered[1].Result.Count),
+                            GetFormattedDifference(ordered[0].Result.SuccessCount, ordered[1].Result.SuccessCount),
+                            GetFormattedDifference(ordered[0].Result.HttpFailCount, ordered[1].Result.HttpFailCount),
+                            GetFormattedDifference(ordered[0].Result.RequestPerSeconds, ordered[1].Result.RequestPerSeconds),
+                            GetFormattedDifference(ordered[0].Result.TotalReceivedBytes, ordered[1].Result.TotalReceivedBytes)
+                        ));
+                }
+
                 builder.AppendLine();
 
                 yield return builder.ToString();
             }
+        }
+
+        private static string GetFormattedDifference(double nbA, double nbB)
+        {
+            if (nbA == 0)
+            {
+                return "/";
+            }
+
+            var proportion = (nbB - nbA) / nbA * 100;
+            return $"{proportion:F}%";
         }
 
         public static void BuildMarkdownResults(List<BenchmarkResult> results, Stream outStream)

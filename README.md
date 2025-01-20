@@ -2,7 +2,6 @@
 
 **This repository c**ontains a combination of an HTTP client (floody) and an HTTP server (floodys) 
 that can be used to test the performance of an HTTP proxy.
-Without the intermediary, this configuration can generate 300K requests per second.
 
 ```
 +---------+       +-----------+       +-----------+
@@ -20,18 +19,25 @@ Clone the repository
 git clone https://github.com/haga-rak/floody.git
 ```
 
-The build script (cmd and bash) can be used to bootstrap quickly a test. 
-A workflow will build and run automatically the server (on a free port) and the client according to the provided options. 
+The build script (cmd and bash), created with Bulleyes.Target, can be used to bootstrap a test quickly. 
+
+Basic syntax:
 
 ```bash
-build benchmarkhttps "floody: <floody-command-line-options>"
+build benchmarkhttps "floody-options: <floody-command-line-options>"
 ```
-Replace benchmarkhttps with benchmarkhttp to test plain HTTP.
+
+Replace `benchmarkhttps` with `benchmarkhttp` to test in plain HTTP. 
 The following command tests the proxy at 127.0.0.1:44344 with 15 concurrent connections and 10 seconds duration.
 
 ```bash
 build benchmarkhttps "floody: -d 10 -c 15 -x 127.0.0.1:44344"
 ```
+
+## Details about apps 
+
+### floody 
+
 
 floody command line options:
 ```

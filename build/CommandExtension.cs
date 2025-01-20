@@ -71,4 +71,72 @@ public static class CommandExtension
         Console.WriteLine(fullText);
 #endif
     }
+
+    public static string[] ExtractFloodysArgs(string[] originalArgs, out string? floodyArgs)
+    {
+        var originalList = originalArgs.ToList();
+
+        floodyArgs = null;
+
+        foreach (var item in originalList.ToList())
+        {
+            if (item.StartsWith("floody-options:") || item.StartsWith("floodyoptions:"))
+            {
+                originalList.Remove(item);
+                var finalValue = item.Split(":", 2)[1];
+                floodyArgs = finalValue;
+            }
+        }
+
+        return originalList.ToArray();
+    }
+
+    public static string[] ExtractBenchArgs(string[] originalArgs, out List<string> proxyUris)
+    {
+        var originalList = originalArgs.ToList();
+
+        proxyUris = new();
+
+        foreach (var item in originalList.ToList())
+        {
+            if (item.StartsWith("compare:"))
+            {
+                originalList.Remove(item);
+                var finalValue = item.Split(":", 2)[1].Trim();
+
+                foreach (var uri in finalValue.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (int.TryParse(uri, out var port))
+                    {
+                        // Assume local port number 
+                        proxyUris.Add($"127.0.0.1:{port}");
+                        continue;
+                    }
+                    
+                    proxyUris.Add(uri);
+                }
+            }
+        }
+
+        return originalList.ToArray();
+    }
+
+    public static string[] ExtractFloodysTarget(string[] originalArgs, out string? floodyArgs)
+    {
+        var originalList = originalArgs.ToList();
+
+        floodyArgs = null;
+
+        foreach (var item in originalList.ToList())
+        {
+            if (item.StartsWith("floody-target:") || item.StartsWith("floodytarget:"))
+            {
+                originalList.Remove(item);
+                var finalValue = item.Split(":", 2)[1];
+                floodyArgs = finalValue;
+            }
+        }
+
+        return originalList.ToArray();
+    }
 }
