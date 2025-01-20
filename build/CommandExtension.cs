@@ -6,11 +6,15 @@ namespace build;
 
 public static class CommandExtension
 {
-    public static async Task<int> WaitForPortNumber(this IAsyncEnumerable<string> input, string scheme)
+    public static async Task<(int HttpPort, int HttpsPort)> WaitForPortNumbers(this IAsyncEnumerable<string> input)
     {
         // will fail when Ms will change kestrel's welcome message
             
-        var regex = new Regex($@"{scheme}://.*:(?<port>\d+)$");
+        var regexHttp = new Regex($@"http://.*:(?<port>\d+)$");
+        var regexHttps = new Regex($@"https://.*:(?<port>\d+)$");
+
+        var httpPort = -1; 
+        var httpsPort = -1; 
 
         await foreach (var line in input)
         {
@@ -18,11 +22,21 @@ public static class CommandExtension
             Console.WriteLine(line);
 #endif
 
-            var match = regex.Match(line);
-
-            if (match.Success)
+            var matchHttps = regexHttps.Match(line);
+            if (matchHttps.Success)
             {
-                return int.Parse(match.Groups["port"].Value);
+                httpsPort = int.Parse(matchHttps.Groups["port"].Value);
+            }
+            
+            var matchHttp = regexHttp.Match(line);
+            if (matchHttp.Success)
+            {
+                httpPort = int.Parse(matchHttp.Groups["port"].Value);
+            }
+            
+            if (httpPort != -1 && httpsPort != -1)
+            {
+                return (httpPort, httpsPort);
             }
         }
 

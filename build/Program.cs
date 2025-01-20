@@ -30,6 +30,9 @@ public class Program
         _serverExecutable = Path.Combine(_outputServer, "floodys");
         _clientExecutable = Path.Combine(_outputClient, "floody");
 
+        int httpPort = -1; 
+        int httpsPort = -1;
+
         using var exitTokenSource = new CancellationTokenSource();
         var exitToken = exitTokenSource.Token;
         
@@ -51,20 +54,31 @@ public class Program
             () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody -o {_outputClient}", cancellationToken: exitToken));
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
-
-        Target("test-http", DependsOn("publish-client", "publish-server"),
+        
+        Target("start-server", DependsOn("publish-server"),
             async () =>
             {
-                await RunTest(floodyArgs, false, exitToken);
-            });
-
-        Target("test-https", DependsOn("publish-client", "publish-server"),
-            async () =>
-            {
-                await RunTest(floodyArgs, true, exitToken);
+                var processId = Process.GetCurrentProcess().Id;
+                
+               (httpPort, httpsPort) = await CommandExtension
+                    .ReadBuffered(_serverExecutable, $"--pid={processId}", _outputServer,
+                        exitToken)
+                    .WaitForPortNumbers();
             });
         
-        Target("bench", DependsOn("publish-client", "publish-server"),
+        Target("test-http", DependsOn("publish-client", "start-server"),
+            async () =>
+            {
+                await RunTest(floodyArgs, false, httpPort, exitToken);
+            });
+
+        Target("test-https", DependsOn("publish-client", "start-server"),
+            async () =>
+            {
+                await RunTest(floodyArgs, true, httpsPort, exitToken);
+            });
+        
+        Target("bench", DependsOn("publish-client", "publish-server", "start-server"),
             async () =>
             {
                 var benchmarkAgenda = BenchmarkAgenda.DefaultAgenda;
@@ -80,29 +94,24 @@ public class Program
                 foreach (var config in configs)
                 {
                     Console.WriteLine($"Running {config.ToFileName()}");
+                    Console.WriteLine("******************************");
+                    Console.WriteLine();
                     
                     var outPath = Path.Combine("_results", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                     var floodyArgs = config.ToFloodyArgs(outPath, out var fileName);
-                    await RunTest(floodyArgs, config.IsHttps, exitToken); 
+                    var port = config.IsHttps ? httpsPort : httpPort;
+                    
+                    await RunTest(floodyArgs, config.IsHttps,port, exitToken); 
                 }
-
-                await RunTest(floodyArgs, true, exitToken);
             });
 
         await RunTargetsAndExitAsync(args, ex => ex is ExitCodeException);
     }
 
-    private static async Task RunTest(string? floodyArgs, bool isHttps, CancellationToken exitToken)
+    private static async Task RunTest(string? floodyArgs, bool isHttps, int port, CancellationToken exitToken)
     {
         var scheme = isHttps ? "https" : "http";
-        var processId = Process.GetCurrentProcess().Id;
-        
-        var serverPortNumber = await CommandExtension
-            .ReadBuffered(_serverExecutable, $"--pid={processId}", _outputServer,
-                exitToken)
-            .WaitForPortNumber(scheme);
-                
-        var finalUrl = $"{scheme}://127.0.0.1:{serverPortNumber}";
+        var finalUrl = $"{scheme}://127.0.0.1:{port}";
         var clientArgs = $"{finalUrl} {floodyArgs}";
         await RunAsync(_clientExecutable, clientArgs, cancellationToken: exitToken, noEcho: false);
     }
