@@ -29,9 +29,9 @@ namespace floody
             _options = options;
             var socketHandler = new SocketsHttpHandler();
 
-            if (options.HttpSettings.WebProxy != null)
+            if (options.HttpSettings.GetWebProxy() != null)
             {
-                socketHandler.Proxy = options.HttpSettings.WebProxy;
+                socketHandler.Proxy = options.HttpSettings.GetWebProxy();
                 socketHandler.UseProxy = true;
             }
 
@@ -75,8 +75,8 @@ namespace floody
             var method = new HttpMethod(options.HttpSettings.Method);
             
             var requestMessage = options.HttpSettings.ResponseBodyLength == 0 
-                ? new HttpRequestMessage(method, options.HttpSettings.Uri) :
-                  new HttpRequestMessage(method, options.HttpSettings.Uri + $"?&length={options.HttpSettings.ResponseBodyLength}" );
+                ? new HttpRequestMessage(method, options.HttpSettings.UriString) :
+                  new HttpRequestMessage(method, options.HttpSettings.UriString + $"?&length={options.HttpSettings.ResponseBodyLength}" );
 
             foreach (var header in options.HttpSettings.AdditionalHeaders)
             {
@@ -106,7 +106,7 @@ namespace floody
             await Task.Delay(1000);
             _startMeasure = true;
 
-            Console.WriteLine($"Flooding {_options.HttpSettings.Uri}...for {(int)_timeout.TotalSeconds}s");
+            Console.WriteLine($"Flooding {_options.HttpSettings.UriString}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
             return new FloodResult(_count, _successCount, 

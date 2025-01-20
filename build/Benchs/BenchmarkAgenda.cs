@@ -22,6 +22,8 @@ namespace build.Benchs
         public List<bool> Schemes { get; }
         
         public int DurationSeconds { get; set; } = 2;
+
+        public int WarmUpDuration { get; set; } = 2;
         
         public List<BenchmarkConfig> GenerateBenchmarkConfigs()
         {

@@ -1,4 +1,5 @@
 using build.Benchs;
+using floody.common;
 
 namespace build
 {
@@ -24,7 +25,13 @@ namespace build
         {
             get
             {
-                return $"{ResponseBodySize}_{IsHttps}_{ProxyUri}";
+                var listItem = new List<string>();
+
+                listItem.Add(IsHttps ? "HTTPS" : "HTTP");
+                listItem.Add($"{FormatHelper.FormatBytes(ResponseBodySize)}");
+                listItem.Add($"{DurationSeconds}s");
+
+                return string.Join(" - ", listItem); 
             }
         }
 

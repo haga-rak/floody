@@ -4,7 +4,7 @@ namespace floody.common
     {
         public static string FormatBytes(double bytes)
         {
-            string[] suffix = ["B", "KB", "MB", "GB", "TB"];
+            string[] suffix = ["bytes", "KB", "MB", "GB", "TB"];
             int i;
             double dblSByte = bytes;
 

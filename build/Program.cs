@@ -91,18 +91,30 @@ public class Program
                 
                 var configs = benchmarkAgenda.GenerateBenchmarkConfigs();
 
+                var benchmarkResults = new List<BenchmarkResult>();
+
+                var flatDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                var outPath = Path.Combine("_results", flatDate);
+
                 foreach (var config in configs)
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"Running {config.ToFileName()}");
                     Console.WriteLine("******************************");
                     Console.WriteLine();
                     
-                    var outPath = Path.Combine("_results", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-                    var floodyArgs = config.ToFloodyArgs(outPath, out var fileName);
+                    var currentArgs = config.ToFloodyArgs(outPath, out var fileName);
                     var port = config.IsHttps ? httpsPort : httpPort;
-                    
-                    await RunTest(floodyArgs, config.IsHttps,port, exitToken); 
+                    await RunTest(currentArgs, config.IsHttps,port, exitToken);
+
+                    benchmarkResults.Add(BenchmarkResult.CreateFrom(config, fileName));
                 }
+
+                var markDownPath = Path.Combine(outPath, "results.md");
+
+                ResultBuilder.BuildMarkdownResults(benchmarkResults, markDownPath);
+
             });
 
         await RunTargetsAndExitAsync(args, ex => ex is ExitCodeException);

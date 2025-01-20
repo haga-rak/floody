@@ -40,7 +40,16 @@ namespace floody
                         await File.WriteAllTextAsync(startupSettings.OutputFile.FullName, prettyMessage);
                     }
 
-                    Console.WriteLine(prettyMessage);
+                    var foreColor = Console.ForegroundColor;
+                    try
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine(prettyMessage);
+                    }
+                    finally
+                    {
+                        Console.ForegroundColor = foreColor;
+                    }
                 }
                 catch (Exception e)
                 {
