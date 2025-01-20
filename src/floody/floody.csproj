@@ -15,5 +15,9 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Text.Json.EnableSourceGeneration" Value="true" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\floody.common\floody.common.csproj" />
+  </ItemGroup>
 
 </Project>

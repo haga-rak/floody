@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Net;
+using floody.common;
 
 namespace floody;
 
@@ -160,7 +161,7 @@ public static class FloodyOptionBuilder
 
     public static string ParseMethod(ArgumentResult result)
     {
-        return result.GetValueOrDefault<string>();
+        return result.Tokens.Select(token => token.Value).First();
     }
 
     private static TimeSpan ParseDuration(ArgumentResult result)

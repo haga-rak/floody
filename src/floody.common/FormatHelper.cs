@@ -1,4 +1,4 @@
-namespace floody
+namespace floody.common
 {
     public static class FormatHelper
     {

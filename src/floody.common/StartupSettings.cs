@@ -1,6 +1,7 @@
+
 using System.Text.Json.Serialization;
 
-namespace floody
+namespace floody.common
 {
     public class StartupSettings
     {

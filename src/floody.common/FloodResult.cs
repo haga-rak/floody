@@ -1,7 +1,6 @@
 using System.Text.Json;
-using System.Xml.Linq;
 
-namespace floody
+namespace floody.common
 {
     public class FloodResult
     {

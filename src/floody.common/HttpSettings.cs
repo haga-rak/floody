@@ -1,20 +1,7 @@
 using System.Net;
 using System.Text.Json.Serialization;
 
-namespace floody;
-
-public class FloodyOptions
-{
-    public FloodyOptions(HttpSettings httpSettings, StartupSettings startupSettings)
-    {
-        HttpSettings = httpSettings;
-        StartupSettings = startupSettings;
-    }
-
-    public HttpSettings HttpSettings { get; }
-
-    public StartupSettings StartupSettings { get; }
-}
+namespace floody.common;
 
 public class HttpSettings
 {
@@ -48,18 +35,4 @@ public class HttpSettings
     public long RequestBodyLength { get; }
     
     public long ResponseBodyLength { get; }
-}
-
-
-public class Header
-{
-    public Header(string name, string value)
-    {
-        Name = name;
-        Value = value;
-    }
-
-    public string Name { get; }
-
-    public string Value { get; }
 }

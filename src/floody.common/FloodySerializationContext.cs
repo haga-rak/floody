@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace floody
+namespace floody.common
 {
     [JsonSerializable(typeof(FloodResult))]
     [JsonSourceGenerationOptions(
