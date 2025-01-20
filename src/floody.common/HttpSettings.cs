@@ -19,6 +19,12 @@ public class HttpSettings
 
     [JsonIgnore]
     public Uri Uri { get; }
+    
+    [JsonIgnore]
+    public WebProxy? WebProxy { get; }
+    
+    [JsonPropertyName("proxy")]
+    public string Proxy => WebProxy?.Address?.ToString() ?? string.Empty;
 
     [JsonPropertyName("uri")]
     public string UriString => Uri.ToString();
@@ -27,8 +33,6 @@ public class HttpSettings
 
     public int ConcurrentConnection { get; }
 
-    [JsonIgnore]
-    public WebProxy? WebProxy { get; }
 
     public IReadOnlyCollection<Header> AdditionalHeaders { get; }
     

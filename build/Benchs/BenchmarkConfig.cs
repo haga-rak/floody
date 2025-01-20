@@ -17,7 +17,16 @@ namespace build
         public int ResponseBodySize { get; }
         
         public bool IsHttps { get; }
+        
         public int DurationSeconds { get; }
+
+        public string GetGroupingKey
+        {
+            get
+            {
+                return $"{ResponseBodySize}_{IsHttps}_{ProxyUri}";
+            }
+        }
 
         public string ToFileName()
         {
