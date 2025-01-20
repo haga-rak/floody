@@ -57,7 +57,6 @@ public static class FloodyOptionBuilder
         return option;
     }
 
-
     private static FileInfo? ParseOutputFile(ArgumentResult result)
     {
         var rawValue = result.Tokens.First().Value;

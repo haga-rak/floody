@@ -42,16 +42,20 @@ public class Program
         var disableAotString = disableAot ? "-p:PublishAot=false" : string.Empty;
 
         Target("build-server", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken, noEcho: true));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} /nologo --verbosity quiet src/floody.server", cancellationToken: exitToken, noEcho: true,
+                configureEnvironment: ConfigureDotnetEnvironment));
 
         Target("publish-server", DependsOn("build-server"),
-            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody.server -o {_outputServer}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} /nologo --verbosity quiet src/floody.server -o {_outputServer}",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken));
 
         Target("build-client", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody", cancellationToken: exitToken, noEcho: true));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} /nologo --verbosity quiet src/floody",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken, noEcho: true));
 
         Target("publish-client", DependsOn("build-client"),
-            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody -o {_outputClient}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} /nologo --verbosity quiet src/floody -o {_outputClient}",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken));
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
         
@@ -114,10 +118,14 @@ public class Program
                 var markDownPath = Path.Combine(outPath, "results.md");
 
                 ResultBuilder.BuildMarkdownResults(benchmarkResults, markDownPath);
-
             });
 
         await RunTargetsAndExitAsync(args, ex => ex is ExitCodeException);
+    }
+
+    private static void ConfigureDotnetEnvironment(IDictionary<string, string?> c)
+    {
+        c["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
     }
 
     private static async Task RunTest(string? floodyArgs, bool isHttps, int port, CancellationToken exitToken)
@@ -155,7 +163,7 @@ public class Program
 
         foreach (var item in originalList.ToList())
         {
-            if (item.StartsWith("proxys:"))
+            if (item.StartsWith("compare:"))
             {
                 originalList.Remove(item);
                 var finalValue = item.Split(":", 2)[1].Trim();

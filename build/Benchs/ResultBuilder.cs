@@ -25,10 +25,13 @@ namespace build.Benchs
             {
                 var builder = new StringBuilder();
 
+                builder.AppendLine(group.Key);
+                builder.AppendLine("********");
+
                 // build header 
                 builder.AppendLine(
                     CreateMarkdownLine(
-                        group.Key,
+                        "   ",
                         "Total",
                         "Success",
                         "Fail",
@@ -58,6 +61,8 @@ namespace build.Benchs
                             item.Result.TotalReceivedPerSeconds
                         ));
                 }
+
+                builder.AppendLine();
 
                 yield return builder.ToString();
             }
