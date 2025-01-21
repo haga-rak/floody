@@ -104,7 +104,7 @@ public static class CommandExtension
                 originalList.Remove(item);
                 var finalValue = item.Split(":", 2)[1].Trim();
 
-                foreach (var uri in finalValue.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var uri in finalValue.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (int.TryParse(uri, out var port))
                     {
