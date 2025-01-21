@@ -7,11 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody", "src\floody\floody
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{67B2E6B8-8DC7-4F9D-A16E-2A03FFE91F12}"
 	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
 		build.cmd = build.cmd
 		build.sh = build.sh
 		README.md = README.md
-		.gitattributes = .gitattributes
-		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.server", "src\floody.server\floody.server.csproj", "{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}"
@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{E1E21A12
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "build", "build\build.csproj", "{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.common", "src\floody.common\floody.common.csproj", "{8352D033-4096-4FED-BB02-34EBEE26A475}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.common", "src\floody.common\floody.common.csproj", "{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +40,10 @@ Global
 		{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8352D033-4096-4FED-BB02-34EBEE26A475}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8352D033-4096-4FED-BB02-34EBEE26A475}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8352D033-4096-4FED-BB02-34EBEE26A475}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8352D033-4096-4FED-BB02-34EBEE26A475}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

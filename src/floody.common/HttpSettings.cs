@@ -5,30 +5,38 @@ namespace floody.common;
 
 public class HttpSettings
 {
-    public HttpSettings(Uri uri, string method, int concurrentConnection,
-        WebProxy? webProxy, IReadOnlyCollection<Header> additionalHeaders, long requestBodyLength, long responseBodyLength)
+    public HttpSettings(string uriString, string method, int concurrentConnection, string? proxy, 
+        IReadOnlyCollection<Header> additionalHeaders,
+        long requestBodyLength, long responseBodyLength)
     {
-        Uri = uri;
+        UriString = uriString;
         Method = method;
         ConcurrentConnection = concurrentConnection;
-        WebProxy = webProxy;
         AdditionalHeaders = additionalHeaders;
         RequestBodyLength = requestBodyLength;
         ResponseBodyLength = responseBodyLength;
+        Proxy = proxy;
     }
 
-    [JsonIgnore]
-    public Uri Uri { get; }
+    public Uri GetUri()
+    {
+        return new Uri(UriString);
+    }
+
+    public WebProxy? GetWebProxy()
+    {
+        return Proxy == null ? null : new WebProxy(Proxy);
+    }
+    
+    [JsonPropertyName("proxy")]
+    public string? Proxy { get; }
 
     [JsonPropertyName("uri")]
-    public string UriString => Uri.ToString();
+    public string UriString { get; }
 
     public string Method { get; }
 
     public int ConcurrentConnection { get; }
-
-    [JsonIgnore]
-    public WebProxy? WebProxy { get; }
 
     public IReadOnlyCollection<Header> AdditionalHeaders { get; }
     

@@ -1,11 +1,12 @@
 // See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
-using System.Text.Json;
+using System.Runtime.InteropServices;
 using build.Benchs;
 
 namespace build;
 
+using HardwareInformation;
 using SimpleExec;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -16,11 +17,13 @@ public class Program
     private static string _outputServer = null!;
     private static string _serverExecutable = null!;
     private static string _clientExecutable = null!;
+    private static string? _floodyTarget;
 
     public static async Task Main(string[] args)
     {
-        args = ExtractFloodysArgs(args,out var floodyArgs);
-        args = ExtractBenchArgs(args,out var proxyUris);
+        args = CommandExtension.ExtractFloodysArgs(args,out var floodyArgs);
+        args = CommandExtension.ExtractBenchArgs(args,out var proxyUris);
+        args = CommandExtension.ExtractFloodysTarget(args,out _floodyTarget);
 
         var workRootPath = $"_work/out";
 
@@ -42,16 +45,20 @@ public class Program
         var disableAotString = disableAot ? "-p:PublishAot=false" : string.Empty;
 
         Target("build-server", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody.server", cancellationToken: exitToken, noEcho: true));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} /nologo --verbosity quiet src/floody.server", cancellationToken: exitToken, noEcho: true,
+                configureEnvironment: ConfigureDotnetEnvironment));
 
         Target("publish-server", DependsOn("build-server"),
-            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody.server -o {_outputServer}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} /nologo --verbosity quiet src/floody.server -o {_outputServer}",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken));
 
         Target("build-client", () =>
-            RunAsync("dotnet", $"build --configuration Release {disableAotString} --verbosity quiet src/floody", cancellationToken: exitToken, noEcho: true));
+            RunAsync("dotnet", $"build --configuration Release {disableAotString} /nologo --verbosity quiet src/floody",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken, noEcho: true));
 
         Target("publish-client", DependsOn("build-client"),
-            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} --verbosity quiet src/floody -o {_outputClient}", cancellationToken: exitToken));
+            () => RunAsync("dotnet", $"publish --configuration Release {disableAotString} /nologo --verbosity quiet src/floody -o {_outputClient}",
+                configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken));
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
         
@@ -91,79 +98,47 @@ public class Program
                 
                 var configs = benchmarkAgenda.GenerateBenchmarkConfigs();
 
+                var benchmarkResults = new List<BenchmarkResult>();
+
+                var flatDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                var outPath = Path.Combine("_results", flatDate);
+
                 foreach (var config in configs)
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"Running {config.ToFileName()}");
                     Console.WriteLine("******************************");
                     Console.WriteLine();
                     
-                    var outPath = Path.Combine("_results", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-                    var floodyArgs = config.ToFloodyArgs(outPath, out var fileName);
+                    var currentArgs = config.ToFloodyArgs(outPath, out var fileName);
                     var port = config.IsHttps ? httpsPort : httpPort;
-                    
-                    await RunTest(floodyArgs, config.IsHttps,port, exitToken); 
+                    await RunTest(currentArgs, config.IsHttps,port, exitToken);
+
+                    benchmarkResults.Add(BenchmarkResult.CreateFrom(config, fileName));
                 }
+
+                var markDownPath = Path.Combine(outPath, "results.md");
+
+                ResultBuilder.BuildMarkdownResults(benchmarkResults, markDownPath);
             });
 
         await RunTargetsAndExitAsync(args, ex => ex is ExitCodeException);
     }
 
+    private static void ConfigureDotnetEnvironment(IDictionary<string, string?> c)
+    {
+        c["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
+    }
+
     private static async Task RunTest(string? floodyArgs, bool isHttps, int port, CancellationToken exitToken)
     {
         var scheme = isHttps ? "https" : "http";
-        var finalUrl = $"{scheme}://127.0.0.1:{port}";
+        var host = _floodyTarget ?? "127.0.0.1";
+
+        var finalUrl = $"{scheme}://{host}:{port}";
         var clientArgs = $"{finalUrl} {floodyArgs}";
         await RunAsync(_clientExecutable, clientArgs, cancellationToken: exitToken, noEcho: false);
     }
-
-    private static string[] ExtractFloodysArgs(string[] originalArgs, out string? floodyArgs)
-    {
-        var originalList = originalArgs.ToList();
-
-        floodyArgs = null;
-
-        foreach (var item in originalList.ToList())
-        {
-            if (item.StartsWith("floody:"))
-            {
-                originalList.Remove(item);
-                var finalValue = item.Split(":", 2)[1];
-                floodyArgs = finalValue;
-            }
-        }
-
-        return originalList.ToArray();
-    }
-    
-    private static string[] ExtractBenchArgs(string[] originalArgs, out List<string> proxyUris)
-    {
-        var originalList = originalArgs.ToList();
-
-        proxyUris = new();
-
-        foreach (var item in originalList.ToList())
-        {
-            if (item.StartsWith("proxys:"))
-            {
-                originalList.Remove(item);
-                var finalValue = item.Split(":", 2)[1].Trim();
-
-                foreach (var uri in finalValue.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (int.TryParse(uri, out var port))
-                    {
-                        // Assume local port number 
-                        proxyUris.Add($"127.0.0.1:{port}");
-                        continue;
-                    }
-                    
-                    proxyUris.Add(uri);
-                }
-
-
-            }
-        }
-
-        return originalList.ToArray();
-    }
 }
+

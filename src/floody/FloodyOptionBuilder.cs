@@ -16,7 +16,7 @@ public static class FloodyOptionBuilder
             "Method to used", "GET");
 
         yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
-                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 16);
+                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 32);
 
         yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
             "Address of HTTP proxy");
@@ -56,7 +56,6 @@ public static class FloodyOptionBuilder
 
         return option;
     }
-
 
     private static FileInfo? ParseOutputFile(ArgumentResult result)
     {
@@ -103,7 +102,9 @@ public static class FloodyOptionBuilder
             .GetValueForOption(
                 symbols.OfType<Option<long>>().First(a => a.Name == "response-body-length"));
 
-        return new HttpSettings(uri, method, concurrentConnection, webProxy, headers, requestBodyLength, responseBodyLength);
+        return new HttpSettings(uri.ToString(),
+            method, concurrentConnection, 
+            webProxy?.Address?.ToString(), headers, requestBodyLength, responseBodyLength);
     }
 
     public static StartupSettings CreateStartupSettings(InvocationContext invocationContext,
@@ -121,7 +122,7 @@ public static class FloodyOptionBuilder
             .GetValueForOption(
                 symbols.OfType<Option<FileInfo>>().First(a => a.Name == "output-file"));
 
-        return new StartupSettings(duration, warmup, outputFile);
+        return new StartupSettings(duration, warmup, outputFile?.FullName);
     }
 
     

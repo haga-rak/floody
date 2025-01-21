@@ -5,20 +5,26 @@ namespace floody.common
 {
     public class StartupSettings
     {
-        public StartupSettings(TimeSpan duration, TimeSpan warmupDuration, FileInfo? outputFile)
+        public StartupSettings(TimeSpan duration, TimeSpan warmupDuration, string? outputFileString)
         {
             Duration = duration;
             WarmupDuration = warmupDuration;
-            OutputFile = outputFile;
+            OutputFileString = outputFileString;
         }
 
         public TimeSpan Duration { get; }
+        
+        public double DurationSeconds => Duration.TotalSeconds;
 
         public TimeSpan WarmupDuration { get; }
+        
+        public double WarmupDurationSeconds => WarmupDuration.TotalSeconds;
 
-        [JsonIgnore] public FileInfo? OutputFile { get; }
+        [JsonIgnore]
+        public FileInfo? OutputFile => OutputFileString == null ? null : new FileInfo(OutputFileString);
 
-        [JsonPropertyName("outputFile")] public string? OutputFileString => OutputFile?.FullName;
+        [JsonPropertyName("outputFile")]
+        public string? OutputFileString { get; }
     }
 
 }

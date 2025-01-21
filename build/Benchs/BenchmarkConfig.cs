@@ -1,15 +1,17 @@
 using build.Benchs;
+using floody.common;
 
 namespace build
 {
     public class BenchmarkConfig
     {
-        public BenchmarkConfig(string? proxyUri, int responseBodySize, bool isHttps, int durationSeconds)
+        public BenchmarkConfig(string? proxyUri, int responseBodySize, bool isHttps, int durationSeconds, int warmupDurationSeconds)
         {
             ProxyUri = proxyUri;
             ResponseBodySize = responseBodySize;
             IsHttps = isHttps;
             DurationSeconds = durationSeconds;
+            WarmupDurationSeconds = warmupDurationSeconds;
         }
 
         public string ? ProxyUri { get; }
@@ -17,7 +19,24 @@ namespace build
         public int ResponseBodySize { get; }
         
         public bool IsHttps { get; }
+        
         public int DurationSeconds { get; }
+        
+        public int WarmupDurationSeconds { get; }
+
+        public string GetGroupingKey
+        {
+            get
+            {
+                var listItem = new List<string>();
+
+                listItem.Add(IsHttps ? "TLS" : "PLAIN");
+                listItem.Add($"{FormatHelper.FormatBytes(ResponseBodySize)}");
+                listItem.Add($"{DurationSeconds}s");
+
+                return string.Join(" - ", listItem); 
+            }
+        }
 
         public string ToFileName()
         {
@@ -57,6 +76,7 @@ namespace build
             
             plainArgs.Add($"-l {ResponseBodySize}");
             plainArgs.Add($"-d {DurationSeconds}");
+            plainArgs.Add($"-w {WarmupDurationSeconds}");
             plainArgs.Add($"-o \"{fileName}\"");
 
             return string.Join(" ", plainArgs);

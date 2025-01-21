@@ -5,7 +5,7 @@ namespace build.Benchs
         public static BenchmarkAgenda DefaultAgenda => new BenchmarkAgenda(
             new List<string?> { null, "127.0.0.1:44344", "127.0.0.1:8080" },
             new List<int> { 0, 8192 },
-            new List<bool> { true, false }
+            new List<bool> { false, true }
         );
         
         public BenchmarkAgenda(List<string?> proxyEndPoints, List<int> responseBodySize, List<bool> schemes)
@@ -21,7 +21,9 @@ namespace build.Benchs
         
         public List<bool> Schemes { get; }
         
-        public int DurationSeconds { get; set; } = 2;
+        public int DurationSeconds { get; set; } = 10;
+
+        public int WarmUpDurationSeconds { get; set; } = 2;
         
         public List<BenchmarkConfig> GenerateBenchmarkConfigs()
         {
@@ -33,7 +35,7 @@ namespace build.Benchs
                 {
                     foreach (var scheme in Schemes)
                     {
-                        configs.Add(new BenchmarkConfig(proxyEndPoint, responseBody, scheme, DurationSeconds));
+                        configs.Add(new BenchmarkConfig(proxyEndPoint, responseBody, scheme, DurationSeconds, WarmUpDurationSeconds));
                     }
                 }
             }
