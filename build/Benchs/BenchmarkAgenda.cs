@@ -21,7 +21,7 @@ namespace build.Benchs
 
         public List<bool> Schemes { get; }
 
-        public int DurationSeconds { get; set; } = 10;
+        public int DurationSeconds { get; set; } = 15;
 
         public int WarmUpDurationSeconds { get; set; } = 2;
 
