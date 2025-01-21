@@ -5,7 +5,7 @@ namespace floody.common;
 
 public class HttpSettings
 {
-    public HttpSettings(string uriString, string method, int concurrentConnection, string? proxy, 
+    public HttpSettings(string uriString, string method, int concurrentConnection, string? proxy,
         IReadOnlyCollection<Header> additionalHeaders,
         long requestBodyLength, long responseBodyLength)
     {
@@ -27,7 +27,7 @@ public class HttpSettings
     {
         return Proxy == null ? null : new WebProxy(Proxy);
     }
-    
+
     [JsonPropertyName("proxy")]
     public string? Proxy { get; }
 
@@ -39,8 +39,8 @@ public class HttpSettings
     public int ConcurrentConnection { get; }
 
     public IReadOnlyCollection<Header> AdditionalHeaders { get; }
-    
+
     public long RequestBodyLength { get; }
-    
+
     public long ResponseBodyLength { get; }
 }

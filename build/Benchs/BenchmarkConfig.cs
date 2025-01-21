@@ -14,14 +14,14 @@ namespace build
             WarmupDurationSeconds = warmupDurationSeconds;
         }
 
-        public string ? ProxyUri { get; }
-        
+        public string? ProxyUri { get; }
+
         public int ResponseBodySize { get; }
-        
+
         public bool IsHttps { get; }
-        
+
         public int DurationSeconds { get; }
-        
+
         public int WarmupDurationSeconds { get; }
 
         public string GetGroupingKey
@@ -34,21 +34,21 @@ namespace build
                 listItem.Add($"{FormatHelper.FormatBytes(ResponseBodySize)}");
                 listItem.Add($"{DurationSeconds}s");
 
-                return string.Join(" - ", listItem); 
+                return string.Join(" - ", listItem);
             }
         }
 
         public string ToFileName()
         {
             var plainArgs = new List<string>();
-            
+
             if (ProxyUri != null)
             {
                 plainArgs.Add($"{ProxyUri}");
             }
-            
+
             plainArgs.Add($"Size-{ResponseBodySize}");
-            
+
             if (IsHttps)
             {
                 plainArgs.Add("HTTPS");
@@ -60,20 +60,20 @@ namespace build
 
             return string.Join("_", plainArgs).StripeInvalidPathChars() + ".json";
         }
-        
+
         public string ToFloodyArgs(string outDirectory, out string fileName)
         {
             Directory.CreateDirectory(outDirectory);
 
             fileName = Path.Combine(outDirectory, ToFileName());
-            
+
             var plainArgs = new List<string>() { };
-            
+
             if (ProxyUri != null)
             {
                 plainArgs.Add($"-x {ProxyUri}");
             }
-            
+
             plainArgs.Add($"-l {ResponseBodySize}");
             plainArgs.Add($"-d {DurationSeconds}");
             plainArgs.Add($"-w {WarmupDurationSeconds}");

@@ -5,7 +5,7 @@ namespace floody;
 public static class StreamHelper
 {
     private static readonly byte[] SharedBuffer = new byte[32 * 1024];
-    
+
     public static async ValueTask<long> DrainAsync(this Stream stream, CancellationToken cancellationToken)
     {
         var total = 0L;

@@ -7,7 +7,7 @@ namespace build.Benchs
             new List<int> { 0, 8192 },
             new List<bool> { false, true }
         );
-        
+
         public BenchmarkAgenda(List<string?> proxyEndPoints, List<int> responseBodySize, List<bool> schemes)
         {
             ProxyEndPoints = proxyEndPoints;
@@ -16,19 +16,19 @@ namespace build.Benchs
         }
 
         public List<string?> ProxyEndPoints { get; }
-        
+
         public List<int> ResponseBodySize { get; }
-        
+
         public List<bool> Schemes { get; }
-        
+
         public int DurationSeconds { get; set; } = 10;
 
         public int WarmUpDurationSeconds { get; set; } = 2;
-        
+
         public List<BenchmarkConfig> GenerateBenchmarkConfigs()
         {
             var configs = new List<BenchmarkConfig>();
-            
+
             foreach (var proxyEndPoint in ProxyEndPoints)
             {
                 foreach (var responseBody in ResponseBodySize)

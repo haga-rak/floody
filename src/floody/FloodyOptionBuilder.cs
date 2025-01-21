@@ -16,14 +16,14 @@ public static class FloodyOptionBuilder
             "Method to used", "GET");
 
         yield return CreateOption(new[] { "--concurrent-connection", "-c" }, ParseConcurrentConnection,
-                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 32);
+                        ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 16);
 
         yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
             "Address of HTTP proxy");
-        
+
         yield return CreateOption(new[] { "--request-body-length", "-r" }, ParseLength, ArgumentArity.ZeroOrOne,
             "Request body length", 0L);
-        
+
         yield return CreateOption(new[] { "--response-body-length", "-l" }, ParseLength, ArgumentArity.ZeroOrOne,
             "Response body length (sends `length` as query string, works only when used with floodys)", 0L);
 
@@ -97,13 +97,13 @@ public static class FloodyOptionBuilder
         var requestBodyLength = invocationContext.ParseResult
             .GetValueForOption(
                 symbols.OfType<Option<long>>().First(a => a.Name == "request-body-length"));
-        
+
         var responseBodyLength = invocationContext.ParseResult
             .GetValueForOption(
                 symbols.OfType<Option<long>>().First(a => a.Name == "response-body-length"));
 
         return new HttpSettings(uri.ToString(),
-            method, concurrentConnection, 
+            method, concurrentConnection,
             webProxy?.Address?.ToString(), headers, requestBodyLength, responseBodyLength);
     }
 
@@ -125,7 +125,7 @@ public static class FloodyOptionBuilder
         return new StartupSettings(duration, warmup, outputFile?.FullName);
     }
 
-    
+
     public static long ParseLength(ArgumentResult result)
     {
         var t = result.Tokens.Select(token => token.Value).First();
@@ -139,10 +139,10 @@ public static class FloodyOptionBuilder
         {
             throw new ArgumentException("Length must be greater than 0");
         }
-        
+
         return value;
     }
-    
+
     public static Uri ParseUri(ArgumentResult result)
     {
         var t = result.Tokens.Select(token => token.Value).First();

@@ -5,7 +5,7 @@ namespace floody
     public class FloodExecutor
     {
         private static readonly int MaxRequestBodyLengthBuffer = 4 * 1024 * 1024;
-        
+
         private readonly FloodyOptions _options;
         private readonly TimeSpan _timeout;
 
@@ -15,8 +15,8 @@ namespace floody
         private int _networkFailCount;
         private long _totalReceived;
         private long _totalSent;
-        
-        private bool _startMeasure; 
+
+        private bool _startMeasure;
 
         private readonly HttpClient _client;
 
@@ -36,7 +36,7 @@ namespace floody
             }
 
             _maxHttpClient = new SemaphoreSlim(Math.Max(256, options.HttpSettings.ConcurrentConnection) + 4);
-            
+
             socketHandler.SslOptions.RemoteCertificateValidationCallback =
                 (_, _, _, _) => true;
 
@@ -49,8 +49,8 @@ namespace floody
             _client = new HttpClient(socketHandler);
 
             _timeout = options.StartupSettings.Duration;
-            
-            var handledLength = (int) Math.Min(MaxRequestBodyLengthBuffer, options.HttpSettings.RequestBodyLength);
+
+            var handledLength = (int)Math.Min(MaxRequestBodyLengthBuffer, options.HttpSettings.RequestBodyLength);
             _requestBuffer = new byte[handledLength];
         }
 
@@ -73,16 +73,16 @@ namespace floody
         private HttpRequestMessage CreateRequest(FloodyOptions options)
         {
             var method = new HttpMethod(options.HttpSettings.Method);
-            
-            var requestMessage = options.HttpSettings.ResponseBodyLength == 0 
+
+            var requestMessage = options.HttpSettings.ResponseBodyLength == 0
                 ? new HttpRequestMessage(method, options.HttpSettings.UriString) :
-                  new HttpRequestMessage(method, options.HttpSettings.UriString + $"?&length={options.HttpSettings.ResponseBodyLength}" );
+                  new HttpRequestMessage(method, options.HttpSettings.UriString + $"?&length={options.HttpSettings.ResponseBodyLength}");
 
             foreach (var header in options.HttpSettings.AdditionalHeaders)
             {
                 requestMessage.Headers.Add(header.Name, header.Value);
             }
-            
+
             if (options.HttpSettings.RequestBodyLength > 0)
             {
                 if (requestMessage.Method == HttpMethod.Get)
@@ -90,10 +90,10 @@ namespace floody
                     // FORCE POST
                     requestMessage.Method = HttpMethod.Post;
                 }
-                
+
                 requestMessage.Content = new ByteArrayContent(_requestBuffer);
             }
-            
+
             return requestMessage;
         }
 
@@ -109,8 +109,8 @@ namespace floody
             Console.WriteLine($"Flooding {_options.HttpSettings.UriString}...for {(int)_timeout.TotalSeconds}s");
             await InternalExecute(_timeout, true);
 
-            return new FloodResult(_count, _successCount, 
-                _failCount, _networkFailCount, 
+            return new FloodResult(_count, _successCount,
+                _failCount, _networkFailCount,
                 _options, _totalReceived, _totalSent);
         }
 

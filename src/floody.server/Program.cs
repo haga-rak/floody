@@ -1,11 +1,14 @@
 using fluxzy.bench.kestrel;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace floody.server
 {
     public class Program
     {
+        [RequiresUnreferencedCode()]
+        [RequiresDynamicCode()]
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);

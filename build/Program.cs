@@ -1,12 +1,10 @@
 // See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using build.Benchs;
 
 namespace build;
 
-using HardwareInformation;
 using SimpleExec;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -21,9 +19,9 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-        args = CommandExtension.ExtractFloodysArgs(args,out var floodyArgs);
-        args = CommandExtension.ExtractBenchArgs(args,out var proxyUris);
-        args = CommandExtension.ExtractFloodysTarget(args,out _floodyTarget);
+        args = CommandExtension.ExtractFloodysArgs(args, out var floodyArgs);
+        args = CommandExtension.ExtractBenchArgs(args, out var proxyUris);
+        args = CommandExtension.ExtractFloodysTarget(args, out _floodyTarget);
 
         var workRootPath = $"_work/out";
 
@@ -33,12 +31,12 @@ public class Program
         _serverExecutable = Path.Combine(_outputServer, "floodys");
         _clientExecutable = Path.Combine(_outputClient, "floody");
 
-        int httpPort = -1; 
+        int httpPort = -1;
         int httpsPort = -1;
 
         using var exitTokenSource = new CancellationTokenSource();
         var exitToken = exitTokenSource.Token;
-        
+
         var disableAot = string.Equals(Environment.GetEnvironmentVariable("DISABLE_AOT"), "1",
             StringComparison.OrdinalIgnoreCase);
 
@@ -61,18 +59,18 @@ public class Program
                 configureEnvironment: ConfigureDotnetEnvironment, cancellationToken: exitToken));
 
         Target("publish", DependsOn("publish-client", "publish-server", "build-client"));
-        
+
         Target("start-server", DependsOn("publish-server"),
             async () =>
             {
                 var processId = Process.GetCurrentProcess().Id;
-                
-               (httpPort, httpsPort) = await CommandExtension
-                    .ReadBuffered(_serverExecutable, $"--pid={processId}", _outputServer,
-                        exitToken)
-                    .WaitForPortNumbers();
+
+                (httpPort, httpsPort) = await CommandExtension
+                     .ReadBuffered(_serverExecutable, $"--pid={processId}", _outputServer,
+                         exitToken)
+                     .WaitForPortNumbers();
             });
-        
+
         Target("test-http", DependsOn("publish-client", "start-server"),
             async () =>
             {
@@ -84,7 +82,7 @@ public class Program
             {
                 await RunTest(floodyArgs, true, httpsPort, exitToken);
             });
-        
+
         Target("bench", DependsOn("publish-client", "publish-server", "start-server"),
             async () =>
             {
@@ -92,10 +90,10 @@ public class Program
 
                 if (proxyUris.Any())
                 {
-                    benchmarkAgenda = new BenchmarkAgenda(new string ? [] { null}.Concat(proxyUris).ToList(),
+                    benchmarkAgenda = new BenchmarkAgenda(new string?[] { null }.Concat(proxyUris).ToList(),
                         benchmarkAgenda.ResponseBodySize, benchmarkAgenda.Schemes);
                 }
-                
+
                 var configs = benchmarkAgenda.GenerateBenchmarkConfigs();
 
                 var benchmarkResults = new List<BenchmarkResult>();
@@ -110,10 +108,10 @@ public class Program
                     Console.WriteLine($"Running {config.ToFileName()}");
                     Console.WriteLine("******************************");
                     Console.WriteLine();
-                    
+
                     var currentArgs = config.ToFloodyArgs(outPath, out var fileName);
                     var port = config.IsHttps ? httpsPort : httpPort;
-                    await RunTest(currentArgs, config.IsHttps,port, exitToken);
+                    await RunTest(currentArgs, config.IsHttps, port, exitToken);
 
                     benchmarkResults.Add(BenchmarkResult.CreateFrom(config, fileName));
                 }

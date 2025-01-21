@@ -8,14 +8,14 @@ namespace floody
         private readonly Stream _innerStream;
         private readonly Action<int> _readCountCallBack;
         private readonly Action<int> _writeCountCallBack;
-        
+
         public ByteCounterStream(Stream innerStream, Action<int> readCountCallBack, Action<int> writeCountCallBack)
         {
             _innerStream = innerStream;
             _readCountCallBack = readCountCallBack;
             _writeCountCallBack = writeCountCallBack;
         }
-        
+
         public override void Flush()
         {
             _innerStream.Flush();
@@ -34,7 +34,7 @@ namespace floody
             _readCountCallBack(read);
             return read;
         }
-        
+
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             await _innerStream.WriteAsync(buffer, offset, count, cancellationToken);

@@ -26,12 +26,12 @@ namespace build.Benchs
 
             MachineInformation info = MachineInformationGatherer.GatherInformation(true);
             var ramBytes = FormatHelper.FormatBytes(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes);
- 
+
             foreach (var group in groupByTestCases)
             {
                 var builder = new StringBuilder();
 
-                builder.AppendLine("#### Test settings: " + group.Key );
+                builder.AppendLine("#### Test settings: " + group.Key);
 
                 // build header 
                 builder.AppendLine(
@@ -53,7 +53,7 @@ namespace build.Benchs
                         "---",
                         "---"
                     ));
-                
+
                 foreach (var item in group.OrderBy(g => g.Configuration.ProxyUri?.ToString()))
                 {
                     builder.AppendLine(
@@ -85,11 +85,11 @@ namespace build.Benchs
                             GetFormattedDifference(ordered[0].Result.TotalReceivedBytes, ordered[1].Result.TotalReceivedBytes)
                         ));
                 }
-                
-                builder.AppendLine();    
+
+                builder.AppendLine();
                 builder.AppendLine($"<sub>{RuntimeInformation.OSDescription} **{info.Cpu.Name} {ramBytes}**</sub>");
-                builder.AppendLine(); 
-                
+                builder.AppendLine();
+
                 yield return builder.ToString();
             }
         }
@@ -131,16 +131,16 @@ namespace build.Benchs
             Configuration = configuration;
         }
 
-        public FloodResult Result { get; } 
-        
+        public FloodResult Result { get; }
+
         public BenchmarkConfig Configuration { get; }
 
         public static BenchmarkResult CreateFrom(BenchmarkConfig config, string floodResultFile)
         {
             using var fileStream = File.OpenRead(floodResultFile);
-            var floodResult = JsonSerializer.Deserialize<FloodResult>(fileStream, 
+            var floodResult = JsonSerializer.Deserialize<FloodResult>(fileStream,
                 new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
-            
+
             return new BenchmarkResult(floodResult, config);
         }
     }

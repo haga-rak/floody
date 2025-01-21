@@ -34,9 +34,9 @@ namespace floody.common
                 return reqPerSeconds;
             }
         }
-        
+
         public long TotalSentBytes { get; }
-        
+
         public long TotalReceivedBytes { get; }
 
         public string TotalSentPerSeconds
@@ -58,7 +58,7 @@ namespace floody.common
                 return $"{FormatHelper.FormatBytes(reqPerSeconds)}/s";
             }
         }
-        
+
         public string PrettyFormat()
         {
             return JsonSerializer.Serialize(this, FloodySerializationContext.Default.FloodResult);
