@@ -1,7 +1,13 @@
  # floody
 
-**This repository c**ontains a combination of an HTTP client (floody) and an HTTP server (floodys) 
-that can be used to test the performance of an HTTP proxy.
+This repository contains a simple performance testing tool for evaluating HTTP proxy servers. 
+It includes an HTTP client (`floody`) to simulate traffic and an HTTP server 
+(`floodys`) based on Kestrel to handle requests.
+
+The current build supports configurable options; concurrent connections, 
+request durations, request and response size, ...
+
+You can also use it to benchmark multiple proxy setups or comparing performance with and without a proxy.
 
 ```
 +---------+       +-----------+       +-----------+
@@ -12,8 +18,9 @@ that can be used to test the performance of an HTTP proxy.
 
 ## Build and run 
 
-
-This project need .NET 9 SDK to build and run.
+This project need :
+- .NET 9 SDK to build and run.
+- `clang` or `gcc` for Linux (by default NativeAOT is enabled). You can set environment variable `DISABLE_AOT` to `1` to dispense from using NativeAOT.
 
 Clone the repository 
 ```bash
@@ -36,7 +43,7 @@ This command will :
 - build the server (`floodys`) in release mode 
 - start the web server on an available port 
 - run the client against the server with the provided options
-- **not start** the proxy server. The proxy server must be up and running before running the test.
+- **NOT START** the proxy server. The proxy server must be up and running before running the test.
 
 Replace `test-https` with `test-http` to test in plain HTTP. 
 
@@ -47,26 +54,19 @@ with 15 concurrent connections, during 10 seconds, and with a 5 seconds warm-up 
 ./build.sh test-https "floody-options: -d 10 -w 5 -c 15 -x 127.0.0.1:44344"
 ```
 
+Use `floody-target:<host-name>` to specify the host name of the server if it is different from `127.0.0.1`.
+
 ### Running a benchmark session 
 
-The command `./build.sh bench` can be used to generate a benchmark between multiple proxy server. 
-By default, the no-proxy configuration is also tested. 
+Use the following command to run a benchmark across multiple proxy servers:
 
 ```bash
 ./build.sh bench "compare:44344 8080"
 ```
-
-This command will :
-- build the client (`floody`) in release mode
-- build the server (`floodys`) in release mode
-- start the web server on an available port
-- Run a subsequent test session for 44344 8080.
-
-The results will be saved in the directory `_results/`.
+By default, the no-proxy configuration is also tested. Results will be saved in the `_results/` directory.
 
 ### floody 
-`floody` is a simple wrapper around HttpClient that provides modest performance. By default, 
-floody will not validate the server certificate.
+`floody` is a simple wrapper around `HttpClient` that provides modest performance. By default, it does not validate server certificates.
 
 #### Command line options:
 ```
@@ -94,14 +94,45 @@ Options:
   --version                                            Show version information
   -?, -h, --help                                       Show help and usage information
 ```
+This is an example of an execution result: 
+
+```json
+{
+  "options": {
+    "httpSettings": {
+      "proxy": "http://127.0.0.1:44344/",
+      "uri": "http://127.0.0.1:38811/",
+      "method": "GET",
+      "concurrentConnection": 16,
+      "additionalHeaders": [],
+      "requestBodyLength": 0,
+      "responseBodyLength": 0
+    },
+    "startupSettings": {
+      "duration": "00:00:15",
+      "durationSeconds": 15,
+      "warmupDuration": "00:00:05",
+      "warmupDurationSeconds": 5
+    }
+  },
+  "count": 1506506,
+  "successCount": 1506506,
+  "httpFailCount": 0,
+  "networkFailCount": 0,
+  "requestPerSeconds": 100433.73333333334,
+  "totalSentBytes": 94910886,
+  "totalReceivedBytes": 198858792,
+  "totalSentPerSeconds": "6.03 MB/s",
+  "totalReceivedPerSeconds": "12.64 MB/s"
+}
+```
 
 ### floodys 
-`floodys` is a straightforward HTTP server based on Kestrel. When running in HTTPS mode, it uses a self-signed certificate `insecure.p12` available 
-on this repository.  `floodys` takes the same arguments as a kestrel server with the addition of `--pid=` options which make the server
-shutdown when the provided process id is terminated.
+`floodys` is a simple HTTP server based on Kestrel. When running in HTTPS mode, it uses the self-signed certificate `insecure.p12`, included in this repository.
+`floodys` accepts the same arguments as a standard Kestrel server, with the addition of the `--pid=<pid>` option. This option ensures the server shuts down when the specified process ID terminates.
 
-
-
+## LICENSE
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
 
