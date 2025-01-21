@@ -7,8 +7,6 @@ namespace floody.server
 {
     public class Program
     {
-        [RequiresUnreferencedCode()]
-        [RequiresDynamicCode()]
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
