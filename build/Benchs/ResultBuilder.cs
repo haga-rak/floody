@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using floody.common;
@@ -23,14 +25,13 @@ namespace build.Benchs
                 results.GroupBy(g => g.Configuration.GetGroupingKey);
 
             MachineInformation info = MachineInformationGatherer.GatherInformation(true);
-            var ramBytes = FormatHelper.FormatBytes(info.RAMSticks.Sum(s => (double) s.Capacity));
-
+            var ramBytes = FormatHelper.FormatBytes(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes);
+ 
             foreach (var group in groupByTestCases)
             {
                 var builder = new StringBuilder();
 
-                builder.AppendLine("Test settings: " + group.Key + $" ({info.Cpu.Name} {ramBytes})");
-                builder.AppendLine("********");
+                builder.AppendLine("#### Test settings: " + group.Key );
 
                 // build header 
                 builder.AppendLine(
@@ -76,7 +77,7 @@ namespace build.Benchs
 
                     builder.AppendLine(
                         CreateMarkdownLine(
-                            "Deviation",
+                            "Diff.",
                             GetFormattedDifference(ordered[0].Result.Count, ordered[1].Result.Count),
                             GetFormattedDifference(ordered[0].Result.SuccessCount, ordered[1].Result.SuccessCount),
                             GetFormattedDifference(ordered[0].Result.HttpFailCount, ordered[1].Result.HttpFailCount),
@@ -84,9 +85,11 @@ namespace build.Benchs
                             GetFormattedDifference(ordered[0].Result.TotalReceivedBytes, ordered[1].Result.TotalReceivedBytes)
                         ));
                 }
-
-                builder.AppendLine();
-
+                
+                builder.AppendLine();    
+                builder.AppendLine($"<sub>{RuntimeInformation.OSDescription} **{info.Cpu.Name} {ramBytes}**</sub>");
+                builder.AppendLine(); 
+                
                 yield return builder.ToString();
             }
         }
@@ -98,8 +101,8 @@ namespace build.Benchs
                 return "/";
             }
 
-            var proportion = (nbB - nbA) * 100 / nbA ;
-            return $"{proportion:F}%";
+            var diff = (nbB / nbA);
+            return $"{diff:F} times";
         }
 
         public static void BuildMarkdownResults(List<BenchmarkResult> results, Stream outStream)

@@ -1,6 +1,7 @@
 // See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using build.Benchs;
 
 namespace build;
@@ -20,9 +21,6 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-
-        
-
         args = CommandExtension.ExtractFloodysArgs(args,out var floodyArgs);
         args = CommandExtension.ExtractBenchArgs(args,out var proxyUris);
         args = CommandExtension.ExtractFloodysTarget(args,out _floodyTarget);

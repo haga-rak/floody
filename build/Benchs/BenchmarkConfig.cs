@@ -5,12 +5,13 @@ namespace build
 {
     public class BenchmarkConfig
     {
-        public BenchmarkConfig(string? proxyUri, int responseBodySize, bool isHttps, int durationSeconds)
+        public BenchmarkConfig(string? proxyUri, int responseBodySize, bool isHttps, int durationSeconds, int warmupDurationSeconds)
         {
             ProxyUri = proxyUri;
             ResponseBodySize = responseBodySize;
             IsHttps = isHttps;
             DurationSeconds = durationSeconds;
+            WarmupDurationSeconds = warmupDurationSeconds;
         }
 
         public string ? ProxyUri { get; }
@@ -20,6 +21,8 @@ namespace build
         public bool IsHttps { get; }
         
         public int DurationSeconds { get; }
+        
+        public int WarmupDurationSeconds { get; }
 
         public string GetGroupingKey
         {
@@ -27,7 +30,7 @@ namespace build
             {
                 var listItem = new List<string>();
 
-                listItem.Add(IsHttps ? "HTTPS" : "HTTP");
+                listItem.Add(IsHttps ? "TLS" : "PLAIN");
                 listItem.Add($"{FormatHelper.FormatBytes(ResponseBodySize)}");
                 listItem.Add($"{DurationSeconds}s");
 
@@ -73,6 +76,7 @@ namespace build
             
             plainArgs.Add($"-l {ResponseBodySize}");
             plainArgs.Add($"-d {DurationSeconds}");
+            plainArgs.Add($"-w {WarmupDurationSeconds}");
             plainArgs.Add($"-o \"{fileName}\"");
 
             return string.Join(" ", plainArgs);

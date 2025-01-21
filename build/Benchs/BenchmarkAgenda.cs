@@ -21,9 +21,9 @@ namespace build.Benchs
         
         public List<bool> Schemes { get; }
         
-        public int DurationSeconds { get; set; } = 2;
+        public int DurationSeconds { get; set; } = 10;
 
-        public int WarmUpDuration { get; set; } = 10;
+        public int WarmUpDurationSeconds { get; set; } = 2;
         
         public List<BenchmarkConfig> GenerateBenchmarkConfigs()
         {
@@ -35,7 +35,7 @@ namespace build.Benchs
                 {
                     foreach (var scheme in Schemes)
                     {
-                        configs.Add(new BenchmarkConfig(proxyEndPoint, responseBody, scheme, DurationSeconds));
+                        configs.Add(new BenchmarkConfig(proxyEndPoint, responseBody, scheme, DurationSeconds, WarmUpDurationSeconds));
                     }
                 }
             }

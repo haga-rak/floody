@@ -13,8 +13,12 @@ namespace floody.common
         }
 
         public TimeSpan Duration { get; }
+        
+        public double DurationSeconds => Duration.TotalSeconds;
 
         public TimeSpan WarmupDuration { get; }
+        
+        public double WarmupDurationSeconds => WarmupDuration.TotalSeconds;
 
         [JsonIgnore]
         public FileInfo? OutputFile => OutputFileString == null ? null : new FileInfo(OutputFileString);
