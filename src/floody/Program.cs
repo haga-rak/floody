@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.Text.Json;
 using floody.common;
 
 namespace floody
@@ -22,7 +21,7 @@ namespace floody
                     var startupSettings = FloodyOptionBuilder.CreateStartupSettings(context, symbols);
                     var options = new FloodyOptions(httpSettings, startupSettings);
 
-                    var floody = new FloodExecutor(options);
+                    using var floody = new FloodExecutor(options);
 
                     var result = await floody.ExecuteAsync();
 

@@ -2,7 +2,7 @@ using floody.common;
 
 namespace floody
 {
-    public class FloodExecutor
+    public class FloodExecutor : IDisposable
     {
         private static readonly int MaxRequestBodyLengthBuffer = 4 * 1024 * 1024;
 
@@ -37,20 +37,15 @@ namespace floody
 
             _maxHttpClient = new SemaphoreSlim(Math.Max(256, options.HttpSettings.ConcurrentConnection) + 4);
 
-            socketHandler.SslOptions.RemoteCertificateValidationCallback =
-                (_, _, _, _) => true;
-
+            socketHandler.SslOptions.RemoteCertificateValidationCallback = (_, _, _, _) => true;
             socketHandler.MaxConnectionsPerServer = options.HttpSettings.ConcurrentConnection;
-
-            socketHandler.PlaintextStreamFilter = (context, token) => new ValueTask<Stream>(new ByteCounterStream(context.PlaintextStream, OnRead, OnWrite));
-
-            CreateRequest(options);
-
+            socketHandler.PlaintextStreamFilter = (context, _) => new ValueTask<Stream>(new ByteCounterStream(context.PlaintextStream, OnRead, OnWrite));
+            
             _client = new HttpClient(socketHandler);
 
             _timeout = options.StartupSettings.Duration;
 
-            var handledLength = (int)Math.Min(MaxRequestBodyLengthBuffer, options.HttpSettings.RequestBodyLength);
+            var handledLength = (int) Math.Min(MaxRequestBodyLengthBuffer, options.HttpSettings.RequestBodyLength);
             _requestBuffer = new byte[handledLength];
         }
 
@@ -76,7 +71,8 @@ namespace floody
 
             var requestMessage = options.HttpSettings.ResponseBodyLength == 0
                 ? new HttpRequestMessage(method, options.HttpSettings.UriString) :
-                  new HttpRequestMessage(method, options.HttpSettings.UriString + $"?&length={options.HttpSettings.ResponseBodyLength}");
+                  new HttpRequestMessage(method,
+                    $"{options.HttpSettings.UriString}?&length={options.HttpSettings.ResponseBodyLength}");
 
             foreach (var header in options.HttpSettings.AdditionalHeaders)
             {
@@ -85,9 +81,9 @@ namespace floody
 
             if (options.HttpSettings.RequestBodyLength > 0)
             {
-                if (requestMessage.Method == HttpMethod.Get)
+                if (requestMessage.Method == HttpMethod.Get || requestMessage.Method == HttpMethod.Delete)
                 {
-                    // FORCE POST
+                    // FORCE POST when request body is not empty
                     requestMessage.Method = HttpMethod.Post;
                 }
 
@@ -107,6 +103,7 @@ namespace floody
             _startMeasure = true;
 
             Console.WriteLine($"Flooding {_options.HttpSettings.UriString}...for {(int)_timeout.TotalSeconds}s");
+
             await InternalExecute(_timeout, true);
 
             return new FloodResult(_count, _successCount,
@@ -116,9 +113,9 @@ namespace floody
 
         private async Task InternalExecute(TimeSpan timeout, bool updateStat)
         {
-            using var cts = new CancellationTokenSource(timeout);
+            using var cancellationTokenSource = new CancellationTokenSource(timeout);
 
-            var token = cts.Token;
+            var token = cancellationTokenSource.Token;
 
             try
             {
@@ -142,8 +139,10 @@ namespace floody
             {
                 var requestMessage = CreateRequest(_options);
 
-                using var response = await _client.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead,
+                using var response = await _client.SendAsync(requestMessage,
+                    HttpCompletionOption.ResponseContentRead,
                     token);
+
                 await using var bodyStream = await response.Content.ReadAsStreamAsync(token);
 
                 _ = await bodyStream.DrainAsync(token);
@@ -169,6 +168,7 @@ namespace floody
             }
             catch (OperationCanceledException)
             {
+                // Natural exit
                 return;
             }
             catch
@@ -187,6 +187,12 @@ namespace floody
 
                 _maxHttpClient.Release();
             }
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
+            _maxHttpClient.Dispose();
         }
     }
 }
