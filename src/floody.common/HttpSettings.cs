@@ -7,7 +7,7 @@ public class HttpSettings
 {
     public HttpSettings(string uriString, string method, int concurrentConnection, string? proxy,
         IReadOnlyCollection<Header> additionalHeaders,
-        long requestBodyLength, long responseBodyLength)
+        long requestBodyLength, long responseBodyLength, bool httpConnect = false)
     {
         UriString = uriString;
         Method = method;
@@ -16,6 +16,7 @@ public class HttpSettings
         RequestBodyLength = requestBodyLength;
         ResponseBodyLength = responseBodyLength;
         Proxy = proxy;
+        HttpConnect = httpConnect;
     }
 
     public Uri GetUri()
@@ -30,6 +31,9 @@ public class HttpSettings
 
     [JsonPropertyName("proxy")]
     public string? Proxy { get; }
+
+    [JsonPropertyName("httpConnect")]
+    public bool HttpConnect { get; }
 
     [JsonPropertyName("uri")]
     public string UriString { get; }

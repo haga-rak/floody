@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11605.240 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody", "src\floody\floody.csproj", "{BCA98A41-BA18-4F77-A12A-180A5306C483}"
 EndProject
@@ -11,8 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 		.gitignore = .gitignore
 		build.cmd = build.cmd
 		build.sh = build.sh
-		README.md = README.md
 		LICENSE = LICENSE
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.server", "src\floody.server\floody.server.csproj", "{F312A39A-1E78-4C3B-BB71-8FF1E7F8DC59}"
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "build", "build\build.csproj", "{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.common", "src\floody.common\floody.common.csproj", "{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "floody.tests", "test\floody.tests\floody.tests.csproj", "{3D77142D-6292-C8C5-7718-073396AE091E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,11 +47,18 @@ Global
 		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31E1CD4D-3366-47E7-AFA5-25CFD43D5F92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D77142D-6292-C8C5-7718-073396AE091E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D77142D-6292-C8C5-7718-073396AE091E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D77142D-6292-C8C5-7718-073396AE091E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D77142D-6292-C8C5-7718-073396AE091E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{82F117F0-CDAE-4603-B7C7-D3F012C0D6AE} = {E1E21A12-C64F-465F-B7C4-998702A0547F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {33F92A73-6EC1-4F9D-A92B-DB19786182CF}
 	EndGlobalSection
 EndGlobal

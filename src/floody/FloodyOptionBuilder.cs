@@ -19,7 +19,9 @@ public static class FloodyOptionBuilder
                         ArgumentArity.ZeroOrOne, "Concurrent connection count to the remote", 16);
 
         yield return CreateOption(new[] { "--proxy", "-x" }, ParseWebProxy, ArgumentArity.ZeroOrOne,
-            "Address of HTTP proxy");
+            "Address of proxy (SOCKS5 by default, use --http-connect for HTTP CONNECT)");
+
+        yield return new Option<bool>("--http-connect", "Use HTTP CONNECT instead of SOCKS5 when proxying");
 
         yield return CreateOption(new[] { "--request-body-length", "-r" }, ParseLength, ArgumentArity.ZeroOrOne,
             "Request body length", 0L);
@@ -102,9 +104,13 @@ public static class FloodyOptionBuilder
             .GetValueForOption(
                 symbols.OfType<Option<long>>().First(a => a.Name == "response-body-length"));
 
+        var httpConnect = invocationContext.ParseResult
+            .GetValueForOption(
+                symbols.OfType<Option<bool>>().First(a => a.Name == "http-connect"));
+
         return new HttpSettings(uri.ToString(),
             method, concurrentConnection,
-            webProxy?.Address?.ToString(), headers, requestBodyLength, responseBodyLength);
+            webProxy?.Address?.ToString(), headers, requestBodyLength, responseBodyLength, httpConnect);
     }
 
     public static StartupSettings CreateStartupSettings(InvocationContext invocationContext,

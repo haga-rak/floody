@@ -1,5 +1,6 @@
 using fluxzy.bench.kestrel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -10,6 +11,14 @@ namespace floody.server
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ConfigureEndpointDefaults(listenOptions =>
+                {
+                    listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                });
+            });
 
             var app = builder.Build();
 
